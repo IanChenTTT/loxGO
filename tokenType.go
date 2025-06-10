@@ -27,7 +27,9 @@ const (
 	// Literals
 	IDENTIFIER
 	STRING
-	NUMBER
+	CHAR
+	INT
+	FLOAT
 	//Keywords
 	AND
 	CLASS
@@ -74,7 +76,9 @@ var TokenName = map[TokenType]string{
 	// Literals
 	IDENTIFIER: "identifier",
 	STRING:     "string",
-	NUMBER:     "number",
+	CHAR:       "char",
+	INT:        "int",
+	FLOAT:      "float",
 
 	// Keywords
 	AND:    "and",

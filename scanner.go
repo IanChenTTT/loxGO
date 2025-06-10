@@ -13,9 +13,6 @@ func (s *Scanner) Scanner(source string) {
 	s.source = source
 	s.srcRune = []rune(s.source)
 }
-func (s *Scanner) isAtEnd() bool {
-	return s.current >= len(s.source)
-}
 
 // scanTokens determine leximine
 // convert leximine to token
@@ -99,6 +96,10 @@ func (s *Scanner) scanToken() errState {
 		}
 		break
 	default:
+		if s.isDigi(c) {
+			s.number()
+			break
+		}
 		eState.erno(s.line, "Unexpected character: ")
 		break
 	}
@@ -147,12 +148,31 @@ func (s *Scanner) literalString() error {
 		s.advance()
 	}
 	if s.peek() != '"' || s.isAtEnd() { //not found pair /* */
-		return New("string was proper close")
+		return New("string was was not close")
 	}
 	s.advance() // current is "
 	val := s.source[s.start+1 : s.current-1]
 	s.addToken(STRING, val)
 	return nil
+}
+
+func (s *Scanner) number() error {
+	for {
+		if s.peek() >= '0' && s.peek() <= '9' {
+			s.advance()
+			continue
+		}
+		if s.peek() == '.' && s.isDigi(s.peekNext()) {
+		}
+		break
+	}
+	return nil
+}
+func (s *Scanner) isDigi(r rune) bool {
+	if r >= '0' && r <= '9' {
+		return true
+	}
+	return false
 }
 
 //
@@ -166,6 +186,12 @@ func (s *Scanner) peek() rune {
 		return 0 // 0 null character \0
 	}
 	return s.srcRune[s.current]
+}
+func (s *Scanner) peekNext() rune {
+	if s.current+1 >= len(s.source) {
+		return 0
+	}
+	return s.srcRune[s.current+1]
 }
 
 // move current rune to next
@@ -189,11 +215,18 @@ func (s *Scanner) match(r rune) bool {
 	s.current++ // already look ahead one
 	return true
 }
+
+// isAtEnd function return current greater then source
+func (s *Scanner) isAtEnd() bool {
+	return s.current >= len(s.source)
+}
 func (s *Scanner) addToken(typ TokenType, literals ...string) {
 	if len(literals) >= 1 {
+		// char literal, string literal , int literal, float literal
 		s.addTokenS(typ, literals[0])
 		return
 	}
+	// I just put IDENTIFIER as string better idea maybe?
 	s.addTokenS(typ, IDENTIFIER.String())
 }
 func (s *Scanner) addTokenS(typ TokenType, literal string) {
