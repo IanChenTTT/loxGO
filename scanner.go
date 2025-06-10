@@ -19,20 +19,20 @@ func (s *Scanner) isAtEnd() bool {
 
 // scanTokens determine leximine
 // convert leximine to token
-func (s *Scanner) scanTokens() ([]Token, errState) {
-	var t []Token
+func (s *Scanner) scanTokens() errState {
 	var eState errState
-	for s.isAtEnd() {
+	eState.hadError = false
+	for !s.isAtEnd() {
 		s.start = s.current
 		eState = s.scanToken()
 	}
-	t = append(t, Token{
+	s.tokens = append(s.tokens, Token{
 		EOF,
 		"",
-		"", //TODO fixed in token.go
+		IDENTIFIER.String(),
 		s.line,
 	})
-	return t, eState
+	return eState
 }
 
 func (s *Scanner) scanToken() errState {
@@ -81,25 +81,91 @@ func (s *Scanner) scanToken() errState {
 	case '>':
 		s.addToken(Iff(s.match('='), GREATER_EQUAL, GREATER))
 		break
+	case '/':
+		if err := s.comment(); err != nil {
+			eState.erno(s.line, err.Error())
+		}
+		break
+	case ' ':
+	case '\r':
+	case '\t':
+		break
+	case '\n':
+		s.line++
+		break
+	case '"':
+		if err := s.literalString(); err != nil {
+			eState.erno(s.line, err.Error())
+		}
+		break
 	default:
-		eState.erno(s.line, "Unexpected character")
+		eState.erno(s.line, "Unexpected character: ")
 		break
 	}
 	return eState
 }
 
-// match rune to current word
-func (s *Scanner) match(r rune) bool {
+//
+// MAIN
+//
+
+// comment make single line comment
+// and multiline comment
+func (s *Scanner) comment() error {
+	// single line comment goes until end of line -> //
+	// multy line comment goest until end of match -> /**/
+	if s.match('/') {
+		for s.peek() != '\n' && !s.isAtEnd() {
+			s.advance()
+		}
+	} else if s.match('*') {
+		for s.peek() != '*' && !s.isAtEnd() {
+			if s.peek() == '\n' {
+				s.line++
+			}
+			s.advance()
+		}
+		if s.peek() != '*' || s.isAtEnd() { //not found pair /* */
+			return New("comment token was not close")
+		}
+		s.advance()
+		if !s.match('/') {
+			return New("comment token was not close found *")
+		}
+	} else {
+		s.addToken(SLASH)
+	}
+	return nil
+}
+
+// literalString is function read multiline string
+func (s *Scanner) literalString() error {
+	for s.peek() != '"' && !s.isAtEnd() {
+		if s.peek() == '\n' {
+			s.line++
+		}
+		s.advance()
+	}
+	if s.peek() != '"' || s.isAtEnd() { //not found pair /* */
+		return New("string was proper close")
+	}
+	s.advance() // current is "
+	val := s.source[s.start+1 : s.current-1]
+	s.addToken(STRING, val)
+	return nil
+}
+
+//
+// UTIL
+//
+
+// peek return current word
+// if current = end return 0
+func (s *Scanner) peek() rune {
 	if s.isAtEnd() {
-		return false
+		return 0 // 0 null character \0
 	}
-	//because advance func execute once
-	//before match func current already+1
-	if s.srcRune[s.current] == r {
-		return true
-	}
-	s.current++ // already look ahead one
-	return false
+	return s.srcRune[s.current]
 }
 
 // move current rune to next
@@ -109,8 +175,26 @@ func (s *Scanner) advance() rune {
 	s.current++
 	return r
 }
-func (s *Scanner) addToken(typ TokenType) {
-	s.addTokenS(typ, "")
+
+// match rune to current word
+func (s *Scanner) match(r rune) bool {
+	if s.isAtEnd() {
+		return false
+	}
+	//because advance func execute once
+	//before match func current already+1
+	if s.srcRune[s.current] != r {
+		return false
+	}
+	s.current++ // already look ahead one
+	return true
+}
+func (s *Scanner) addToken(typ TokenType, literals ...string) {
+	if len(literals) >= 1 {
+		s.addTokenS(typ, literals[0])
+		return
+	}
+	s.addTokenS(typ, IDENTIFIER.String())
 }
 func (s *Scanner) addTokenS(typ TokenType, literal string) {
 	text := s.source[s.start:s.current]

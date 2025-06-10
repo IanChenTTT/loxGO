@@ -5,6 +5,7 @@ import "fmt"
 // errState recording program state
 type errState struct {
 	hadError bool
+	s        string
 }
 
 // errReport  report current error occure
@@ -15,6 +16,12 @@ type errReport struct {
 	state errState
 }
 
+func (e *errState) Error() string {
+	return e.s
+}
+func New(s string) error {
+	return &errState{true, s}
+}
 func (eState *errState) erno(line int, msg string) {
 	report(errReport{line, "", msg, *eState})
 }
