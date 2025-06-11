@@ -1,4 +1,4 @@
-package main
+package lox
 
 import (
 	"bufio"
@@ -7,18 +7,14 @@ import (
 	"os"
 )
 
-var eState errState
-
-func init() {
-
-}
-
+// check is a private error checker
+// which implied  system error, not user error
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
-func runFile(path string) {
+func RunFile(path string) {
 	var estate errState
 	fil, err := os.Open(path)
 	check(err)
@@ -37,7 +33,7 @@ func runFile(path string) {
 		panic("run return error")
 	}
 }
-func runPrompt() {
+func RunPrompt() {
 	var state errState
 	red := bufio.NewReader(os.Stdin)
 	fmt.Println("Enter expression, ctrl-d twice to end of file:")
@@ -65,14 +61,4 @@ func run(src *[]byte) errState {
 		fmt.Printf("scan: %d  %s\n", i, tok.toString())
 	}
 	return eState
-}
-func main() {
-	fmt.Println(len(os.Args), os.Args)
-	if len(os.Args) > 2 {
-		panic("Usage: jlox [script]")
-	} else if len(os.Args) == 2 {
-		runFile(os.Args[1])
-	} else {
-		runPrompt()
-	}
 }

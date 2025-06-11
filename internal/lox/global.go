@@ -1,4 +1,4 @@
-package main
+package lox
 
 // Iff if only if statement return val1 T , val2 T
 // contribute by https://stackoverflow.com/questions/19979178/what-is-the-idiomatic-go-equivalent-of-cs-ternary-operator
