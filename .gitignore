@@ -39,3 +39,5 @@ Thumbs.db
 *.cover
 *.coverprofile
 *.testresult
+# Anything relate to bkp file
+*.bkp
