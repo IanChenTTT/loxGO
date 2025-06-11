@@ -33,7 +33,7 @@ func runFile(path string) {
 	err = fil.Close()
 	check(err)
 	estate = run(&buf) //TODO
-	if !estate.hadError {
+	if estate.hadError {
 		panic("run return error")
 	}
 }

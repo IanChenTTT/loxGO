@@ -112,7 +112,9 @@ func (s *Scanner) scanToken() errState {
 			}
 			break
 		} else if s.isAlpha(c) {
-			s.identifier()
+			if err := s.identifier(); err != nil {
+				eState.erno(s.line, err.Error())
+			}
 			break
 		}
 		// unidentify
@@ -223,15 +225,20 @@ func (s *Scanner) number() error {
 	s.addToken(INT, int32(i64))
 	return nil
 }
-func (s *Scanner) identifier() {
+
+// identifier return it's keyword or user identifier
+// TODO check maybe ? potential error
+func (s *Scanner) identifier() error {
 	for s.isAlpha(s.peek()) || s.isDigi(s.peek()) {
 		s.advance()
 	}
 	val, prs := keywords[s.source[s.start:s.current]]
 	if !prs {
 		s.addToken(IDENTIFIER)
+		return nil
 	}
 	s.addToken(val)
+	return nil
 }
 func (s *Scanner) isAlpha(r rune) bool {
 	if (r >= 'a' && r <= 'z') ||
