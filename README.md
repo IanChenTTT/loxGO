@@ -2,9 +2,33 @@
 
 ## Build
 
-1. make run 
-2. make build
-2. make clean
+- run lox executable 
+    1. run cmd mode
+    ```bash
+        make run 
+    ```
+    2. build
+    ```bash
+        make build 
+    ```
+    3. run file
+    ```bash
+        make build && ./builds/lox file.lox
+    ```
+-  generate AST node file
+    1. run
+    ```bash
+    ./ast.sh Path
+    ```
+    2. build
+    ```bash
+    make ast 
+    ```
+- clean builds folder // TODO fix build folder 
+    1.
+    ```bash
+    make clean 
+    ```
 
 ## Channel Log
 

@@ -1,0 +1,24 @@
+package {{.PkgName}}
+import (
+	t "github.com/IanChenTTT/loxGO/internal/lox/token"
+)
+{{$base := .Base}}
+type {{.Base}} interface {
+	{{.Base}}Node()
+}
+{{range .SubBase -}}
+type {{.Sub}} struct {
+  {{range .Param -}}
+  {{.Field}} {{.TypeName}} 
+  {{end -}} 
+}
+{{$nick := .NickName -}}
+func ( {{.NickName}} *{{.Sub}} ) {{.Sub}}(in {{.Sub}}) {
+  {{range .Param -}}
+  {{$nick}}.{{.Field}}=in.{{.Field}}
+  {{end -}}
+}
+func ({{$nick}} *{{.Sub}}) {{$base}}Node() {
+}
+{{end -}}
+
