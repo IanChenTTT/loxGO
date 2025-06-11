@@ -4,11 +4,15 @@ $(BUILD_DIR):
 APP=lox
 BIN= $(BUILD_DIR)/$(APP)
 
+# if func  init have execute order
+# rearrange the build target order
+# EXAMPLE
+TARGET= ./global.go ./error.go ./tokenType.go ./token.go ./scanner.go ./main.go
 .PHONY: all build run clean test fmt lint
 
 all: run
 build: $(BUILD_DIR)
-	go build -o $(BIN) .
+	go build -o $(BIN) $(TARGET)
 run: build
 	./$(BIN)
 clean:

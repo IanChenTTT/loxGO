@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strconv"
+)
+
 type Scanner struct {
 	source  string
 	srcRune []rune
@@ -23,12 +27,7 @@ func (s *Scanner) scanTokens() errState {
 		s.start = s.current
 		eState = s.scanToken()
 	}
-	s.tokens = append(s.tokens, Token{
-		EOF,
-		"",
-		IDENTIFIER.String(),
-		s.line,
-	})
+	s.addToken(EOF)
 	return eState
 }
 
@@ -83,23 +82,40 @@ func (s *Scanner) scanToken() errState {
 			eState.erno(s.line, err.Error())
 		}
 		break
-	case ' ':
+	case ' ': // here just discard the white space
 	case '\r':
 	case '\t':
 		break
 	case '\n':
 		s.line++
 		break
-	case '"':
+	case '"': // string
 		if err := s.literalString(); err != nil {
 			eState.erno(s.line, err.Error())
 		}
 		break
+	case '\'': //char
+		if err := s.literalChar(); err != nil {
+			eState.erno(s.line, err.Error())
+		}
+		break
+
+	// C for IDENTIFIER(variable and the like)
+	// regex form as follow
+	// [a-zA-Z_][a-zA-Z_0-9]* a
+	// if first c is numeric than it's literal
+	// if first c is alpha than check regex,keyword , or IDENTIFIER/variable
 	default:
 		if s.isDigi(c) {
-			s.number()
+			if err := s.number(); err != nil {
+				eState.erno(s.line, err.Error())
+			}
+			break
+		} else if s.isAlpha(c) {
+			s.identifier()
 			break
 		}
+		// unidentify
 		eState.erno(s.line, "Unexpected character: ")
 		break
 	}
@@ -139,6 +155,20 @@ func (s *Scanner) comment() error {
 	return nil
 }
 
+func (s *Scanner) literalChar() error {
+	c := s.peek()
+	if c >= 0 && c <= 127 {
+		if s.peekNext() != '\'' {
+			return New("char was not properly close found: " + string(s.peekNext()))
+		}
+		s.advance()
+		s.advance()
+		s.addToken(CHAR, c)
+		return nil
+	}
+	return New("not valid ascii char")
+}
+
 // literalString is function read multiline string
 func (s *Scanner) literalString() error {
 	for s.peek() != '"' && !s.isAtEnd() {
@@ -156,17 +186,60 @@ func (s *Scanner) literalString() error {
 	return nil
 }
 
+// number scan threw enter number
+// need detect false number TODO
+// need detect method inject TODO
 func (s *Scanner) number() error {
+	var isFloat bool
 	for {
 		if s.peek() >= '0' && s.peek() <= '9' {
 			s.advance()
 			continue
 		}
-		if s.peek() == '.' && s.isDigi(s.peekNext()) {
+		if s.peek() == '.' {
+			if !s.isDigi(s.peekNext()) {
+				// TODO probally 123.method() is allowed need to fix this line
+				s.advance() // advance current . rune
+				return New("number was not properly form last digit is .")
+			}
+			isFloat = true
+			s.advance() // advance current . rune
+			continue
 		}
 		break
 	}
+	if isFloat {
+		val, err := strconv.ParseFloat(s.source[s.start:s.current], 64)
+		if err != nil {
+			return New("INTERNAL float convert fail")
+		}
+		s.addToken(FLOAT, val)
+		return nil
+	}
+	i64, err := strconv.ParseInt(s.source[s.start:s.current], 10, 32)
+	if err != nil {
+		return New("INTERNAL int convert fail")
+	}
+	s.addToken(INT, int32(i64))
 	return nil
+}
+func (s *Scanner) identifier() {
+	for s.isAlpha(s.peek()) || s.isDigi(s.peek()) {
+		s.advance()
+	}
+	val, prs := keywords[s.source[s.start:s.current]]
+	if !prs {
+		s.addToken(IDENTIFIER)
+	}
+	s.addToken(val)
+}
+func (s *Scanner) isAlpha(r rune) bool {
+	if (r >= 'a' && r <= 'z') ||
+		(r >= 'A' && r <= 'Z') ||
+		(r == '_') {
+		return true
+	}
+	return false
 }
 func (s *Scanner) isDigi(r rune) bool {
 	if r >= '0' && r <= '9' {
@@ -187,6 +260,9 @@ func (s *Scanner) peek() rune {
 	}
 	return s.srcRune[s.current]
 }
+
+// peekNext return current +1 word
+// if current+1 = end return 0
 func (s *Scanner) peekNext() rune {
 	if s.current+1 >= len(s.source) {
 		return 0
@@ -220,16 +296,19 @@ func (s *Scanner) match(r rune) bool {
 func (s *Scanner) isAtEnd() bool {
 	return s.current >= len(s.source)
 }
-func (s *Scanner) addToken(typ TokenType, literals ...string) {
+
+// addToken is wrapper to add token ,
+// default token literal type is IDENTIFIER
+func (s *Scanner) addToken(typ TokenType, literals ...any) {
 	if len(literals) >= 1 {
 		// char literal, string literal , int literal, float literal
 		s.addTokenS(typ, literals[0])
 		return
 	}
-	// I just put IDENTIFIER as string better idea maybe?
-	s.addTokenS(typ, IDENTIFIER.String())
+	// I just put nil better idea?
+	s.addTokenS(typ, nil)
 }
-func (s *Scanner) addTokenS(typ TokenType, literal string) {
+func (s *Scanner) addTokenS(typ TokenType, literal any) {
 	text := s.source[s.start:s.current]
 	s.tokens = append(s.tokens, Token{
 		typ,

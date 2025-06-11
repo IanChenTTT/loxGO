@@ -30,7 +30,8 @@ const (
 	CHAR
 	INT
 	FLOAT
-	//Keywords
+	//Keywords src/go/token/token.go beg if for indexing
+	keyword_beg
 	AND
 	CLASS
 	ELSE
@@ -47,6 +48,8 @@ const (
 	TRUE
 	VAR
 	WHILE
+	keyword_end
+
 	EOF
 )
 
@@ -101,6 +104,16 @@ var TokenName = map[TokenType]string{
 	EOF: "eof",
 }
 
+// Global Variable
+var keywords map[string]TokenType //key:string val: int
+func init() {
+	keywords = make(map[string]TokenType, keyword_end-(keyword_beg+1))
+	for i := keyword_beg + 1; i < keyword_end; i++ {
+		keywords[TokenName[i]] = i
+	}
+}
+
+// String return token string
 func (t TokenType) String() string {
 	return TokenName[t]
 }

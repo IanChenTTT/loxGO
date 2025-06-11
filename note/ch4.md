@@ -16,9 +16,25 @@
     character of the source cod, the scanner figure out what  
     lexeme the character belong, and following character,
     when it reach enf of character it emit token, and so on 
-
-
-    
-    
-
-
+4. reserve word eg: keyword are identifier , but we need seperate  
+    between user identifier , keyword, so Token conain  
+    1. KeyWordType
+    2. identifier
+5. about semicolon -> implicit semicolon  
+    so case like go [Effective go](https://go.dev/doc/effective_go#semicolons)
+    "The rule is this. If the last token before a newline is an identifier  
+    (which includes words like int and float64),  
+    a basic literal such as a number or string constant, or one of the tokens "
+    > break continue fallthrough return ++ -- ) }
+    so yes
+    ```go
+    if(){
+    }
+    ```
+    so no, because ) it trigger identifier
+    ```go
+    if()
+    {
+    }
+    ```
+    so probally just design no implicit semicolon
