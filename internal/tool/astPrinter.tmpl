@@ -1,0 +1,36 @@
+package {{.PkgName}}
+import (
+	t "github.com/IanChenTTT/loxGO/internal/lox/token"
+)
+{{$base := .Base}}
+type {{.Base}} interface {
+	{{.Base}}Node()
+	accept( visitor Visitor[any] ) any
+}
+type Visitor[T any] interface {
+  {{range .SubBase -}}
+	visit{{.Sub}}( expr {{.Sub}} ) T
+  {{end -}} 
+}
+{{range .SubBase -}}
+type {{.Sub}} struct {
+  {{range .Param -}}
+  {{.Field}} {{.TypeName}} 
+  {{end -}} 
+}
+{{$nick := .NickName -}}
+{{- /* func ( b *Binary ) Binary( in Binary ) */ -}}
+func ( {{.NickName}} *{{.Sub}} ) {{.Sub}}( in {{.Sub}} ) {
+  {{range .Param -}}
+  {{$nick}}.{{.Field}}=in.{{.Field}}
+  {{end -}}
+}
+{{/* func (b *Binary) ExprNode() */}}
+func ( {{$nick}} *{{.Sub}} ) {{$base}}Node() {
+}
+func ({{$nick}} *{{.Sub}}) accept(visitor Visitor[any]) any {
+	visitor.visit{{.Sub}}( *{{$nick}} )
+	return *{{$nick}}
+}
+{{end -}}
+

@@ -33,8 +33,13 @@
 ## Channel Log
 
 1. CH4 rough scanner finish, add additinal float, char , multi comment support
+2. CH5 working ...
 
-## Note
+## TODO
+
+1. add test suite for internal, eg: internal/token/_test.go 
+
+# # Note
 
 1. [ch3](./note/ch3.md)
 2. [ch4](./note/ch4.md)

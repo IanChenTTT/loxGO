@@ -171,26 +171,35 @@ func defineAST(DIR string) error {
 			},
 		},
 	}
+	templateAST(&astData, DIR)
+	return nil
+}
+func templateAST(astData *ASTtmplBASE, DIR string) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
-	dir := filepath.Join(wd, "/internal/tool/ast.tmpl")
-	tmpl, err := template.ParseFiles(dir)
-	if err != nil {
-		panic(err.Error())
+	dirs := []string{
+		filepath.Join(wd, "/internal/tool/ast.tmpl"),
+		filepath.Join(wd, "/internal/tool/astPrinter.tmpl"),
 	}
-	genDIR := filepath.Join(wd, "/internal/lox", DIR)
-	f, err := create(genDIR)
-	if err != nil {
-		panic(err.Error())
+	for _, dir := range dirs {
+		tmpl, err := template.ParseFiles(dir)
+		if err != nil {
+			return err
+		}
+		genDIR := filepath.Join(wd, "/internal/lox", DIR)
+		f, err := create(genDIR)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		err = tmpl.Execute(f, astData)
+		if err != nil {
+			return err
+		}
+		fmt.Println("success create at: ", genDIR)
 	}
-	defer f.Close()
-	err = tmpl.Execute(f, astData)
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Println("success create at: ", genDIR)
 	return nil
 }
 func create(p string) (*os.File, error) {
