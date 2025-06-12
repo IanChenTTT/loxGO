@@ -78,3 +78,9 @@ operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
 - like just empty 
 > 
 
+### Design note
+
+1. Important quote: 
+    "The Visitor pattern is really about approximating the functional style within an OOP language. It lets us add new columns to that table easily. We can define all of the behavior for a new operation on a set of types in one place,
+    without having to touch the types themselves"
+
