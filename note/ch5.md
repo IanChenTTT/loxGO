@@ -51,8 +51,8 @@
     bread     → "toast" | "biscuits" | "English muffin" ;
     ```
     - Terminals are quoted strings, and nonterminals are lowercase words.
-    - * to allow the previous symbol or group to be repeated zero or more times.
-    - + is similar, but requires the preceding production to appear at least once.
+    - \* to allow the previous symbol or group to be repeated zero or more times.
+    - \+ is similar, but requires the preceding production to appear at least once.
     - () parentheses for grouping and then allow |
          within that to select one from a series of options within the middle of a production.
     - ?  is for an optional production. The thing before it can appear zero or one time, but not more.
