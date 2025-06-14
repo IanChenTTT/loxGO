@@ -104,13 +104,23 @@ var TokenName = map[TokenType]string{
 	EOF: "eof",
 }
 
-// Global Variable
+// make it private global variable
+// use LookUp to find match keyword
 var keywords map[string]TokenType //key:string val: int
 func init() {
 	keywords = make(map[string]TokenType, keyword_end-(keyword_beg+1))
 	for i := keyword_beg + 1; i < keyword_end; i++ {
 		keywords[TokenName[i]] = i
 	}
+}
+
+// Lookup functon search keyword
+// return identifier if not found , else keyword
+func Lookup(idet string) TokenType {
+	if tok, ok := keywords[idet]; ok {
+		return tok
+	}
+	return IDENTIFIER
 }
 
 // String return token string

@@ -8,10 +8,10 @@ type Literal interface {
 	string | float32 | int
 }
 type Token struct {
-	types   TokenType
-	lexemes string
-	literal any
-	line    int
+	Types   TokenType
+	Lexemes string
+	Literal any
+	Line    int
 }
 type Tokenize interface {
 	token(t Token) error
@@ -22,29 +22,29 @@ func (t *Token) token(parToken Token) error {
 	*t = parToken
 	return nil
 }
-func (t *Token) toString() string {
-	switch t.literal.(type) {
+func (t *Token) ToString() string {
+	switch t.Literal.(type) {
 	case string:
-		str, _ := t.literal.(string)
-		return "type: " + t.types.String() + " lexemes: " + t.lexemes + " literal: " + str
+		str, _ := t.Literal.(string)
+		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + str
 	case int32: // single char rune is allias to int 32 wtf
-		switch t.types {
+		switch t.Types {
 		case CHAR:
-			in, _ := t.literal.(rune)
-			return "type: " + t.types.String() + " lexemes: " + t.lexemes + " literal: " + string(in)
+			in, _ := t.Literal.(rune)
+			return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + string(in)
 		case INT:
-			in, _ := t.literal.(int32)
+			in, _ := t.Literal.(int32)
 			s := strconv.FormatInt(int64(in), 10)
-			return "type: " + t.types.String() + " lexemes: " + t.lexemes + " literal: " + s
+			return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + s
 		default:
 			return "int token type doesn't match literal"
 		}
 	case float64:
-		in, _ := t.literal.(float64)
+		in, _ := t.Literal.(float64)
 		s := strconv.FormatFloat(in, 'E', -1, 32)
-		return "type: " + t.types.String() + " lexemes: " + t.lexemes + " literal: " + s
+		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + s
 	case nil:
-		return "type: " + t.types.String() + " lexemes: " + t.lexemes + " literal: " + NIL.String()
+		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + NIL.String()
 	default:
 		return "token not found"
 	}

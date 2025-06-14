@@ -29,8 +29,7 @@ func ( {{.NickName}} *{{.Sub}} ) {{.Sub}}( in {{.Sub}} ) {
 func ( {{$nick}} *{{.Sub}} ) {{$base}}Node() {
 }
 func ({{$nick}} *{{.Sub}}) accept(visitor Visitor[any]) any {
-	visitor.visit{{.Sub}}( *{{$nick}} )
-	return *{{$nick}}
+	return visitor.visit{{.Sub}}( *{{$nick}} )
 }
 {{end -}}
 

@@ -1,8 +1,12 @@
 package {{.PkgName}}
 import (
+	"fmt"
 	t "github.com/IanChenTTT/loxGO/internal/lox/token"
+	"strconv"
+	"strings"
 )
-{{$base := .Base}}
+{{$vBase := .Visitor}}
+{{range .}}
 type {{.Base}} interface {
 	{{.Base}}Node()
 	accept( visitor Visitor[any] ) any

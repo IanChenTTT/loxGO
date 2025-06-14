@@ -1,13 +1,14 @@
 package lox
 
 import (
+	t "github.com/IanChenTTT/loxGO/internal/lox/token"
 	"strconv"
 )
 
 type Scanner struct {
 	source  string
 	srcRune []rune
-	tokens  []Token
+	tokens  []t.Token
 	start   int
 	current int
 	line    int
@@ -27,7 +28,7 @@ func (s *Scanner) scanTokens() errState {
 		s.start = s.current
 		eState = s.scanToken()
 	}
-	s.addToken(EOF)
+	s.addToken(t.EOF)
 	return eState
 }
 
@@ -36,46 +37,46 @@ func (s *Scanner) scanToken() errState {
 	c := s.advance()
 	switch c {
 	case '(':
-		s.addToken(LEFT_PAREN)
+		s.addToken(t.LEFT_PAREN)
 		break
 	case ')':
-		s.addToken(RIGHT_PAREN)
+		s.addToken(t.RIGHT_PAREN)
 		break
 	case '{':
-		s.addToken(LEFT_BRACE)
+		s.addToken(t.LEFT_BRACE)
 		break
 	case '}':
-		s.addToken(RIGHT_PAREN)
+		s.addToken(t.RIGHT_PAREN)
 		break
 	case ',':
-		s.addToken(COMMA)
+		s.addToken(t.COMMA)
 		break
 	case '.':
-		s.addToken(DOT)
+		s.addToken(t.DOT)
 		break
 	case '-':
-		s.addToken(MINUS)
+		s.addToken(t.MINUS)
 		break
 	case '+':
-		s.addToken(PLUS)
+		s.addToken(t.PLUS)
 		break
 	case ';':
-		s.addToken(SEMICOLON)
+		s.addToken(t.SEMICOLON)
 		break
 	case '*':
-		s.addToken(STAR)
+		s.addToken(t.STAR)
 		break
 	case '!':
-		s.addToken(Iff(s.match('!'), BANG_EQUAL, BANG))
+		s.addToken(Iff(s.match('!'), t.BANG_EQUAL, t.BANG))
 		break
 	case '=':
-		s.addToken(Iff(s.match('='), EQUAL_EQUAL, EQUAL))
+		s.addToken(Iff(s.match('='), t.EQUAL_EQUAL, t.EQUAL))
 		break
 	case '<':
-		s.addToken(Iff(s.match('='), LESS_EQUAL, LESS))
+		s.addToken(Iff(s.match('='), t.LESS_EQUAL, t.LESS))
 		break
 	case '>':
-		s.addToken(Iff(s.match('='), GREATER_EQUAL, GREATER))
+		s.addToken(Iff(s.match('='), t.GREATER_EQUAL, t.GREATER))
 		break
 	case '/':
 		if err := s.comment(); err != nil {
@@ -152,7 +153,7 @@ func (s *Scanner) comment() error {
 			return New("comment token was not close found *")
 		}
 	} else {
-		s.addToken(SLASH)
+		s.addToken(t.SLASH)
 	}
 	return nil
 }
@@ -165,7 +166,7 @@ func (s *Scanner) literalChar() error {
 		}
 		s.advance()
 		s.advance()
-		s.addToken(CHAR, c)
+		s.addToken(t.CHAR, c)
 		return nil
 	}
 	return New("not valid ascii char")
@@ -184,7 +185,7 @@ func (s *Scanner) literalString() error {
 	}
 	s.advance() // current is "
 	val := s.source[s.start+1 : s.current-1]
-	s.addToken(STRING, val)
+	s.addToken(t.STRING, val)
 	return nil
 }
 
@@ -215,14 +216,14 @@ func (s *Scanner) number() error {
 		if err != nil {
 			return New("INTERNAL float convert fail")
 		}
-		s.addToken(FLOAT, val)
+		s.addToken(t.FLOAT, val)
 		return nil
 	}
 	i64, err := strconv.ParseInt(s.source[s.start:s.current], 10, 32)
 	if err != nil {
 		return New("INTERNAL int convert fail")
 	}
-	s.addToken(INT, int32(i64))
+	s.addToken(t.INT, int32(i64))
 	return nil
 }
 
@@ -232,12 +233,7 @@ func (s *Scanner) identifier() error {
 	for s.isAlpha(s.peek()) || s.isDigi(s.peek()) {
 		s.advance()
 	}
-	val, prs := keywords[s.source[s.start:s.current]]
-	if !prs {
-		s.addToken(IDENTIFIER)
-		return nil
-	}
-	s.addToken(val)
+	s.addToken(t.Lookup(s.source[s.start:s.current]))
 	return nil
 }
 func (s *Scanner) isAlpha(r rune) bool {
@@ -306,7 +302,7 @@ func (s *Scanner) isAtEnd() bool {
 
 // addToken is wrapper to add token ,
 // default token literal type is IDENTIFIER
-func (s *Scanner) addToken(typ TokenType, literals ...any) {
+func (s *Scanner) addToken(typ t.TokenType, literals ...any) {
 	if len(literals) >= 1 {
 		// char literal, string literal , int literal, float literal
 		s.addTokenS(typ, literals[0])
@@ -315,12 +311,12 @@ func (s *Scanner) addToken(typ TokenType, literals ...any) {
 	// I just put nil better idea?
 	s.addTokenS(typ, nil)
 }
-func (s *Scanner) addTokenS(typ TokenType, literal any) {
+func (s *Scanner) addTokenS(typ t.TokenType, literal any) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, Token{
-		typ,
-		text,
-		literal,
-		s.line,
+	s.tokens = append(s.tokens, t.Token{
+		Types:   typ,
+		Lexemes: text,
+		Literal: literal,
+		Line:    s.line,
 	})
 }

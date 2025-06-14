@@ -2,6 +2,7 @@ package tool
 
 import (
 	"fmt"
+	ast "github.com/IanChenTTT/loxGO/internal/lox/ast"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -144,30 +145,39 @@ func GenAST(arg string) {
 		panic(err.Error())
 	}
 }
+func AstPrint() {
+	ast.Run()
+}
 func defineAST(DIR string) error {
 	astData := ASTtmplBASE{
-		"lox",
-		"Expr",
-		[]ASTtmplSUB{
+		PkgName: "ast",
+		Base:    "Expr",
+		SubBase: []ASTtmplSUB{
 			{
-				"Binary",
-				"b",
-				[]ASTtmplType{{"left", "Expr"}, {"operator", "t.Token"}, {"right", "Expr "}},
+				Sub:      "Binary",
+				NickName: "b",
+				Param: []ASTtmplType{
+					{Field: "left", TypeName: "Expr"},
+					{Field: "operator", TypeName: "t.Token"},
+					{Field: "right", TypeName: "Expr"},
+				},
 			},
 			{
-				"Grouping",
-				"g",
-				[]ASTtmplType{{"expression", "Expr"}},
+				Sub:      "Grouping",
+				NickName: "g",
+				Param:    []ASTtmplType{{Field: "expr", TypeName: "Expr"}},
 			},
 			{
-				"Literal",
-				"l",
-				[]ASTtmplType{{"value", "any"}},
+				Sub:      "Literal",
+				NickName: "l",
+				Param:    []ASTtmplType{{Field: "value", TypeName: "any"}},
 			},
 			{
-				"Unary",
-				"g",
-				[]ASTtmplType{{"operator", "t.Token"}, {"right", "Expr"}},
+				Sub:      "Unary",
+				NickName: "g",
+				Param: []ASTtmplType{
+					{Field: "operator", TypeName: "t.Token"},
+					{Field: "right", TypeName: "Expr"}},
 			},
 		},
 	}
@@ -181,7 +191,7 @@ func templateAST(astData *ASTtmplBASE, DIR string) error {
 	}
 	dirs := []string{
 		filepath.Join(wd, "/internal/tool/ast.tmpl"),
-		filepath.Join(wd, "/internal/tool/astPrinter.tmpl"),
+		//filepath.Join(wd, "/internal/tool/astPrinter.tmpl"),
 	}
 	for _, dir := range dirs {
 		tmpl, err := template.ParseFiles(dir)

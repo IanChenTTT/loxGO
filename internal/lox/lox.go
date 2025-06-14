@@ -58,7 +58,7 @@ func run(src *[]byte) errState {
 	scanner.Scanner(string(*src))
 	eState := scanner.scanTokens()
 	for i, tok := range scanner.tokens {
-		fmt.Printf("scan: %d  %s\n", i, tok.toString())
+		fmt.Printf("scan: %d  %s\n", i, tok.ToString())
 	}
 	return eState
 }

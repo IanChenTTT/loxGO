@@ -12,4 +12,5 @@ func main() {
 		panic("usage ./genAST relativePathToFolder")
 	}
 	tool.GenAST(os.Args[1])
+	tool.AstPrint()
 }
