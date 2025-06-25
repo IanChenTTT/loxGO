@@ -157,27 +157,27 @@ func defineAST(DIR string) error {
 				Sub:      "Binary",
 				NickName: "b",
 				Param: []ASTtmplType{
-					{Field: "left", TypeName: "Expr"},
-					{Field: "operator", TypeName: "t.Token"},
-					{Field: "right", TypeName: "Expr"},
+					{Field: "Left", TypeName: "Expr"},
+					{Field: "Operator", TypeName: "t.Token"},
+					{Field: "Right", TypeName: "Expr"},
 				},
 			},
 			{
 				Sub:      "Grouping",
 				NickName: "g",
-				Param:    []ASTtmplType{{Field: "expr", TypeName: "Expr"}},
+				Param:    []ASTtmplType{{Field: "Expr", TypeName: "Expr"}},
 			},
 			{
 				Sub:      "Literal",
 				NickName: "l",
-				Param:    []ASTtmplType{{Field: "value", TypeName: "any"}},
+				Param:    []ASTtmplType{{Field: "Value", TypeName: "any"}},
 			},
 			{
 				Sub:      "Unary",
 				NickName: "g",
 				Param: []ASTtmplType{
-					{Field: "operator", TypeName: "t.Token"},
-					{Field: "right", TypeName: "Expr"}},
+					{Field: "Operator", TypeName: "t.Token"},
+					{Field: "Right", TypeName: "Expr"}},
 			},
 		},
 	}

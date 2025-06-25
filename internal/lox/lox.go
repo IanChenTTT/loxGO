@@ -3,6 +3,10 @@ package lox
 import (
 	"bufio"
 	"fmt"
+	"github.com/IanChenTTT/loxGO/internal/lox/ast"
+	g "github.com/IanChenTTT/loxGO/internal/lox/global"
+	"github.com/IanChenTTT/loxGO/internal/lox/parser"
+	s "github.com/IanChenTTT/loxGO/internal/lox/scanner"
 	"io"
 	"os"
 )
@@ -15,7 +19,7 @@ func check(e error) {
 	}
 }
 func RunFile(path string) {
-	var estate errState
+	var estate g.ErrState
 	fil, err := os.Open(path)
 	check(err)
 	stat, err := fil.Stat()
@@ -29,12 +33,12 @@ func RunFile(path string) {
 	err = fil.Close()
 	check(err)
 	estate = run(&buf) //TODO
-	if estate.hadError {
+	if estate.HadError {
 		panic("run return error")
 	}
 }
 func RunPrompt() {
-	var state errState
+	var state g.ErrState
 	red := bufio.NewReader(os.Stdin)
 	fmt.Println("Enter expression, ctrl-d twice to end of file:")
 	var buf []byte
@@ -46,19 +50,22 @@ func RunPrompt() {
 			if err == io.EOF {
 				fmt.Println() // flush buffer
 				state = run(&buf)
-				state.hadError = false //TODO
+				state.HadError = false //TODO
 				break
 			}
 			check(err)
 		}
 	}
 }
-func run(src *[]byte) errState {
-	var scanner Scanner
+func run(src *[]byte) g.ErrState {
+	var scanner s.Scanner
 	scanner.Scanner(string(*src))
-	eState := scanner.scanTokens()
-	for i, tok := range scanner.tokens {
+	eState := scanner.ScanTokens()
+	for i, tok := range scanner.Tokens {
 		fmt.Printf("scan: %d  %s\n", i, tok.ToString())
 	}
+	parsed := parser.NewParser(scanner.Tokens)
+	astPrint := ast.NewASTPrinter()
+	astPrint.Print(parsed.Run())
 	return eState
 }

@@ -1,14 +1,16 @@
-package lox
+package scanner
 
 import (
+	g "github.com/IanChenTTT/loxGO/internal/lox/global"
 	t "github.com/IanChenTTT/loxGO/internal/lox/token"
+
 	"strconv"
 )
 
 type Scanner struct {
 	source  string
 	srcRune []rune
-	tokens  []t.Token
+	Tokens  []t.Token
 	start   int
 	current int
 	line    int
@@ -21,9 +23,9 @@ func (s *Scanner) Scanner(source string) {
 
 // scanTokens determine leximine
 // convert leximine to token
-func (s *Scanner) scanTokens() errState {
-	var eState errState
-	eState.hadError = false
+func (s *Scanner) ScanTokens() g.ErrState {
+	var eState g.ErrState
+	eState.HadError = false
 	for !s.isAtEnd() {
 		s.start = s.current
 		eState = s.scanToken()
@@ -32,8 +34,8 @@ func (s *Scanner) scanTokens() errState {
 	return eState
 }
 
-func (s *Scanner) scanToken() errState {
-	var eState errState
+func (s *Scanner) scanToken() g.ErrState {
+	var eState g.ErrState
 	c := s.advance()
 	switch c {
 	case '(':
@@ -67,20 +69,20 @@ func (s *Scanner) scanToken() errState {
 		s.addToken(t.STAR)
 		break
 	case '!':
-		s.addToken(Iff(s.match('!'), t.BANG_EQUAL, t.BANG))
+		s.addToken(g.Iff(s.match('!'), t.BANG_EQUAL, t.BANG))
 		break
 	case '=':
-		s.addToken(Iff(s.match('='), t.EQUAL_EQUAL, t.EQUAL))
+		s.addToken(g.Iff(s.match('='), t.EQUAL_EQUAL, t.EQUAL))
 		break
 	case '<':
-		s.addToken(Iff(s.match('='), t.LESS_EQUAL, t.LESS))
+		s.addToken(g.Iff(s.match('='), t.LESS_EQUAL, t.LESS))
 		break
 	case '>':
-		s.addToken(Iff(s.match('='), t.GREATER_EQUAL, t.GREATER))
+		s.addToken(g.Iff(s.match('='), t.GREATER_EQUAL, t.GREATER))
 		break
 	case '/':
 		if err := s.comment(); err != nil {
-			eState.erno(s.line, err.Error())
+			eState.Erno(s.line, err.Error())
 		}
 		break
 	case ' ': // here just discard the white space
@@ -92,12 +94,12 @@ func (s *Scanner) scanToken() errState {
 		break
 	case '"': // string
 		if err := s.literalString(); err != nil {
-			eState.erno(s.line, err.Error())
+			eState.Erno(s.line, err.Error())
 		}
 		break
 	case '\'': //char
 		if err := s.literalChar(); err != nil {
-			eState.erno(s.line, err.Error())
+			eState.Erno(s.line, err.Error())
 		}
 		break
 
@@ -109,17 +111,17 @@ func (s *Scanner) scanToken() errState {
 	default:
 		if s.isDigi(c) {
 			if err := s.number(); err != nil {
-				eState.erno(s.line, err.Error())
+				eState.Erno(s.line, err.Error())
 			}
 			break
 		} else if s.isAlpha(c) {
 			if err := s.identifier(); err != nil {
-				eState.erno(s.line, err.Error())
+				eState.Erno(s.line, err.Error())
 			}
 			break
 		}
 		// unidentify
-		eState.erno(s.line, "Unexpected character: ")
+		eState.Erno(s.line, "Unexpected character: ")
 		break
 	}
 	return eState
@@ -146,11 +148,11 @@ func (s *Scanner) comment() error {
 			s.advance()
 		}
 		if s.peek() != '*' || s.isAtEnd() { //not found pair /* */
-			return New("comment token was not close")
+			return g.New("comment token was not close")
 		}
 		s.advance()
 		if !s.match('/') {
-			return New("comment token was not close found *")
+			return g.New("comment token was not close found *")
 		}
 	} else {
 		s.addToken(t.SLASH)
@@ -162,14 +164,14 @@ func (s *Scanner) literalChar() error {
 	c := s.peek()
 	if c >= 0 && c <= 127 {
 		if s.peekNext() != '\'' {
-			return New("char was not properly close found: " + string(s.peekNext()))
+			return g.New("char was not properly close found: " + string(s.peekNext()))
 		}
 		s.advance()
 		s.advance()
 		s.addToken(t.CHAR, c)
 		return nil
 	}
-	return New("not valid ascii char")
+	return g.New("not valid ascii char")
 }
 
 // literalString is function read multiline string
@@ -181,7 +183,7 @@ func (s *Scanner) literalString() error {
 		s.advance()
 	}
 	if s.peek() != '"' || s.isAtEnd() { //not found pair /* */
-		return New("string was was not close")
+		return g.New("string was was not close")
 	}
 	s.advance() // current is "
 	val := s.source[s.start+1 : s.current-1]
@@ -203,7 +205,7 @@ func (s *Scanner) number() error {
 			if !s.isDigi(s.peekNext()) {
 				// TODO probally 123.method() is allowed need to fix this line
 				s.advance() // advance current . rune
-				return New("number was not properly form last digit is .")
+				return g.New("number was not properly form last digit is .")
 			}
 			isFloat = true
 			s.advance() // advance current . rune
@@ -214,14 +216,14 @@ func (s *Scanner) number() error {
 	if isFloat {
 		val, err := strconv.ParseFloat(s.source[s.start:s.current], 64)
 		if err != nil {
-			return New("INTERNAL float convert fail")
+			return g.New("INTERNAL float convert fail")
 		}
 		s.addToken(t.FLOAT, val)
 		return nil
 	}
 	i64, err := strconv.ParseInt(s.source[s.start:s.current], 10, 32)
 	if err != nil {
-		return New("INTERNAL int convert fail")
+		return g.New("INTERNAL int convert fail")
 	}
 	s.addToken(t.INT, int32(i64))
 	return nil
@@ -313,7 +315,7 @@ func (s *Scanner) addToken(typ t.TokenType, literals ...any) {
 }
 func (s *Scanner) addTokenS(typ t.TokenType, literal any) {
 	text := s.source[s.start:s.current]
-	s.tokens = append(s.tokens, t.Token{
+	s.Tokens = append(s.Tokens, t.Token{
 		Types:   typ,
 		Lexemes: text,
 		Literal: literal,

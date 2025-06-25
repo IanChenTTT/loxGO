@@ -15,15 +15,15 @@ type Visitor[T any] interface {
 	visitUnary(expr Unary) T
 }
 type Binary struct {
-	left     Expr
-	operator t.Token
-	right    Expr
+	Left     Expr
+	Operator t.Token
+	Right    Expr
 }
 
 func (b *Binary) Binary(in Binary) {
-	b.left = in.left
-	b.operator = in.operator
-	b.right = in.right
+	b.Left = in.Left
+	b.Operator = in.Operator
+	b.Right = in.Right
 }
 
 func (b *Binary) ExprNode() {
@@ -33,11 +33,11 @@ func (b *Binary) accept(visitor Visitor[any]) any {
 }
 
 type Grouping struct {
-	expr Expr
+	Expr Expr
 }
 
 func (g *Grouping) Grouping(in Grouping) {
-	g.expr = in.expr
+	g.Expr = in.Expr
 }
 
 func (g *Grouping) ExprNode() {
@@ -47,11 +47,11 @@ func (g *Grouping) accept(visitor Visitor[any]) any {
 }
 
 type Literal struct {
-	value any
+	Value any
 }
 
 func (l *Literal) Literal(in Literal) {
-	l.value = in.value
+	l.Value = in.Value
 }
 
 func (l *Literal) ExprNode() {
@@ -61,13 +61,13 @@ func (l *Literal) accept(visitor Visitor[any]) any {
 }
 
 type Unary struct {
-	operator t.Token
-	right    Expr
+	Operator t.Token
+	Right    Expr
 }
 
 func (g *Unary) Unary(in Unary) {
-	g.operator = in.operator
-	g.right = in.right
+	g.Operator = in.Operator
+	g.Right = in.Right
 }
 
 func (g *Unary) ExprNode() {

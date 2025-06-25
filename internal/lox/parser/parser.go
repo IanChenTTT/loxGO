@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	ast "github.com/IanChenTTT/loxGO/internal/lox/ast"
 	t "github.com/IanChenTTT/loxGO/internal/lox/token"
 )
@@ -11,6 +12,7 @@ type Parser struct {
 }
 
 /*
+lowest priority to highest priority
 expression     → equality ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -32,41 +34,130 @@ func NewParser(tokens []t.Token) *Parser {
 		current: 0,
 	}
 }
-func (p *Parser) Run() {
-	p.expression()
+func (p *Parser) Run() ast.Expr {
+	return p.expression()
 }
 
 func (p *Parser) expression() ast.Expr {
 	return p.equality()
 }
+
+//BINARY
+
+// common operation stand for common binary operation
+func (p *Parser) common(fn func() ast.Expr, typs ...t.TokenType) ast.Expr {
+	var expr ast.Expr
+	expr = fn() // start from left expression
+	for p.match(typs...) {
+		tok := p.previous()
+		var right ast.Expr
+		right = fn()
+		expr = &ast.Binary{
+			Left:     expr, // this append previous exprion aka left expression
+			Operator: tok,
+			Right:    right,
+		}
+	}
+	return expr
+}
+
+// comparison(...)* this would keep matching (==|!=)
+// ((==|!=)comparison)* => ==a==b like this
 func (p *Parser) equality() ast.Expr {
-	//exprComp = comparison()
-	return p.equality() //TODO
+	return p.common(p.comparison, t.BANG_EQUAL, t.EQUAL_EQUAL)
 }
+
+// term(...)* this would keep matching (>|>=|<|<=)
+// ((>|>=|<|<=)term)* => > a > b like this
 func (p *Parser) comparison() ast.Expr {
-	var expr ast.Expr
-	return expr //TODO
+	return p.common(p.term, t.GREATER, t.GREATER_EQUAL, t.LESS, t.LESS_EQUAL)
 }
+
+// factor(...)* this would keep matching (-|+)
+// ((-|+)factor)* => - b + a like this
 func (p *Parser) term() ast.Expr {
-	var expr ast.Expr
-	return expr //TODO
+	return p.common(p.factor, t.MINUS, t.PLUS)
 }
+
+// unary(...)* this would keep matching (*|/)
+// ((*|/)unary)* => * b / a like this
 func (p *Parser) factor() ast.Expr {
-	var expr ast.Expr
-	return expr //TODO
+	return p.common(p.unary, t.SLASH, t.STAR)
 }
+
+// unary will recursive find - or !
+// or not found it just return terminal literal
 func (p *Parser) unary() ast.Expr {
-	var expr ast.Expr
-	return expr //TODO
+	if p.match(t.BANG, t.MINUS) {
+		tok := p.previous()
+		var right ast.Expr
+		right = p.unary()
+		return &ast.Unary{
+			Operator: tok,
+			Right:    right,
+		}
+	}
+	return p.primary()
 }
+
+// primary is last rule that match the terminal
 func (p *Parser) primary() ast.Expr {
 	var expr ast.Expr
-	return expr //TODO
+	if p.match(t.FALSE) {
+		expr = &ast.Literal{Value: false}
+		return expr
+	} else if p.match(t.TRUE) {
+		expr = &ast.Literal{Value: true}
+		return expr
+	} else if p.match(t.NIL) {
+		expr = &ast.Literal{Value: nil}
+		return expr
+	} else if p.match(t.INT, t.STRING, t.CHAR, t.FLOAT) {
+		expr = &ast.Literal{
+			Value: p.previous().Literal,
+		}
+		return expr
+	} else if p.match(t.INT, t.STRING, t.CHAR, t.FLOAT) {
+		expr = &ast.Literal{
+			Value: p.previous().Literal,
+		}
+		return expr
+	} else if p.match(t.LEFT_PAREN) {
+		expr = p.expression()
+		p.consume(t.RIGHT_PAREN, errors.New("Expect ')' after expression"))
+		return expr
+	}
+	return expr
+}
+
+//
+// ERROR
+//
+
+// consume is a parser checker make sure expression enclose
+func (p *Parser) consume(tok t.TokenType, msg error) {
+	if p.tokens[p.current].Types != tok {
+		panic(msg) // TODO
+	}
 }
 
 //
 // UTIL
 //
+
+// match series of tokenType to current token type
+func (p *Parser) match(types ...t.TokenType) bool {
+	if p.isAtEnd() {
+		return false
+	}
+	for _, typ := range types {
+		if p.check(typ) {
+			p.advance()
+			return true
+		}
+	}
+	return false
+}
 
 // advance check current token is EOF
 // if not return current token and
@@ -80,11 +171,11 @@ func (p *Parser) advance() t.Token {
 }
 
 // check return tok type match current tok type
-func (p *Parser) check(tok t.Token) bool {
+func (p *Parser) check(tok t.TokenType) bool {
 	if p.isAtEnd() {
 		return false
 	}
-	return p.tokens[p.current].Types == tok.Types
+	return p.tokens[p.current].Types == tok
 }
 
 // peek return Parser.current
