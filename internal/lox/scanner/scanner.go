@@ -40,68 +40,50 @@ func (s *Scanner) scanToken() g.ErrState {
 	switch c {
 	case '(':
 		s.addToken(t.LEFT_PAREN)
-		break
 	case ')':
 		s.addToken(t.RIGHT_PAREN)
-		break
 	case '{':
 		s.addToken(t.LEFT_BRACE)
-		break
 	case '}':
 		s.addToken(t.RIGHT_PAREN)
-		break
 	case ',':
 		s.addToken(t.COMMA)
-		break
 	case '.':
 		s.addToken(t.DOT)
-		break
 	case '-':
 		s.addToken(t.MINUS)
-		break
 	case '+':
 		s.addToken(t.PLUS)
-		break
 	case ';':
 		s.addToken(t.SEMICOLON)
-		break
 	case '*':
 		s.addToken(t.STAR)
-		break
 	case '!':
 		s.addToken(g.Iff(s.match('!'), t.BANG_EQUAL, t.BANG))
-		break
 	case '=':
 		s.addToken(g.Iff(s.match('='), t.EQUAL_EQUAL, t.EQUAL))
-		break
 	case '<':
 		s.addToken(g.Iff(s.match('='), t.LESS_EQUAL, t.LESS))
-		break
 	case '>':
 		s.addToken(g.Iff(s.match('='), t.GREATER_EQUAL, t.GREATER))
-		break
 	case '/':
 		if err := s.comment(); err != nil {
 			eState.Erno(s.line, err.Error())
 		}
-		break
 	case ' ': // here just discard the white space
 	case '\r':
 	case '\t':
 		break
 	case '\n':
 		s.line++
-		break
 	case '"': // string
 		if err := s.literalString(); err != nil {
 			eState.Erno(s.line, err.Error())
 		}
-		break
 	case '\'': //char
 		if err := s.literalChar(); err != nil {
 			eState.Erno(s.line, err.Error())
 		}
-		break
 
 	// C for IDENTIFIER(variable and the like)
 	// regex form as follow
@@ -122,7 +104,6 @@ func (s *Scanner) scanToken() g.ErrState {
 		}
 		// unidentify
 		eState.Erno(s.line, "Unexpected character: ")
-		break
 	}
 	return eState
 }
@@ -225,7 +206,7 @@ func (s *Scanner) number() error {
 	if err != nil {
 		return g.New("INTERNAL int convert fail")
 	}
-	s.addToken(t.INT, int32(i64))
+	s.addToken(t.INT, int(i64))
 	return nil
 }
 

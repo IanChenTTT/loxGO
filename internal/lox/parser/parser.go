@@ -105,27 +105,17 @@ func (p *Parser) primary() ast.Expr {
 	var expr ast.Expr
 	if p.match(t.FALSE) {
 		expr = &ast.Literal{Value: false}
-		return expr
 	} else if p.match(t.TRUE) {
 		expr = &ast.Literal{Value: true}
-		return expr
 	} else if p.match(t.NIL) {
 		expr = &ast.Literal{Value: nil}
-		return expr
 	} else if p.match(t.INT, t.STRING, t.CHAR, t.FLOAT) {
 		expr = &ast.Literal{
 			Value: p.previous().Literal,
 		}
-		return expr
-	} else if p.match(t.INT, t.STRING, t.CHAR, t.FLOAT) {
-		expr = &ast.Literal{
-			Value: p.previous().Literal,
-		}
-		return expr
 	} else if p.match(t.LEFT_PAREN) {
 		expr = p.expression()
 		p.consume(t.RIGHT_PAREN, errors.New("Expect ')' after expression"))
-		return expr
 	}
 	return expr
 }

@@ -3,12 +3,13 @@ package lox
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/IanChenTTT/loxGO/internal/lox/ast"
 	g "github.com/IanChenTTT/loxGO/internal/lox/global"
 	"github.com/IanChenTTT/loxGO/internal/lox/parser"
 	s "github.com/IanChenTTT/loxGO/internal/lox/scanner"
-	"io"
-	"os"
 )
 
 // check is a private error checker
@@ -64,8 +65,11 @@ func run(src *[]byte) g.ErrState {
 	for i, tok := range scanner.Tokens {
 		fmt.Printf("scan: %d  %s\n", i, tok.ToString())
 	}
+	if len(scanner.Tokens) == 1 {
+		return eState //  EOF handle TODO better EOR handle
+	}
 	parsed := parser.NewParser(scanner.Tokens)
 	astPrint := ast.NewASTPrinter()
-	astPrint.Print(parsed.Run())
+	fmt.Println(astPrint.Print(parsed.Run()))
 	return eState
 }
