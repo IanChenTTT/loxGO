@@ -26,7 +26,6 @@ func (ast *ASTPrinter) visitLiteral(expr Literal) any {
 	if expr.Value == nil {
 		return "nil"
 	}
-	fmt.Printf("%T type and value %v", expr.Value, expr.Value)
 	switch expr.Value.(type) {
 	case string:
 		str, _ := expr.Value.(string)
@@ -36,11 +35,9 @@ func (ast *ASTPrinter) visitLiteral(expr Literal) any {
 		s := strconv.FormatFloat(f, 'E', -1, 32)
 		return s
 	case int:
-		fmt.Println("it should enter here1")
 		s := strconv.Itoa(expr.Value.(int))
 		return s
 	case int32:
-		fmt.Println("it should enter here2")
 		in, _ := expr.Value.(rune)
 		return string(in)
 	}

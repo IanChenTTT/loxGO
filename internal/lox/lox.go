@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
-	//"github.com/IanChenTTT/loxGO/internal/lox/ast"
+	"github.com/IanChenTTT/loxGO/internal/lox/ast"
 	g "github.com/IanChenTTT/loxGO/internal/lox/global"
-	//"github.com/IanChenTTT/loxGO/internal/lox/parser"
+	"github.com/IanChenTTT/loxGO/internal/lox/parser"
 	s "github.com/IanChenTTT/loxGO/internal/lox/scanner"
 )
 
@@ -65,13 +65,11 @@ func run(src *[]byte) g.ErrState {
 	for i, tok := range scanner.Tokens {
 		fmt.Printf("scan: %d  %s\n", i, tok.ToString())
 	}
-	/*
-		 len(scanner.Tokens) == 1 {
-					return eState //  EOF handle TODO better EOR handle
-				}
-				parsed := parser.NewParser(scanner.Tokens)
-				astPrint := ast.NewASTPrinter()
-				fmt.Println(astPrint.Print(parsed.Run()))
-	*/
+	if len(scanner.Tokens) == 1 {
+		return eState //  EOF handle TODO better EOR handle
+	}
+	parsed := parser.NewParser(scanner.Tokens)
+	astPrint := ast.NewASTPrinter()
+	fmt.Println(astPrint.Print(parsed.Run()))
 	return eState
 }

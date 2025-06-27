@@ -1,15 +1,17 @@
 package parser
 
 import (
-	"errors"
 	ast "github.com/IanChenTTT/loxGO/internal/lox/ast"
-	//g "github.com/IanChenTTT/loxGO/internal/lox/global"
+	g "github.com/IanChenTTT/loxGO/internal/lox/global"
 	t "github.com/IanChenTTT/loxGO/internal/lox/token"
 )
 
 type Parser struct {
 	tokens  []t.Token
 	current int
+}
+type parserError struct {
+	s string
 }
 
 /*
@@ -116,7 +118,10 @@ func (p *Parser) primary() ast.Expr {
 		}
 	} else if p.match(t.LEFT_PAREN) {
 		expr = p.expression()
-		p.consume(t.RIGHT_PAREN, errors.New("Expect ')' after expression"))
+		tok, eState := p.consume(t.RIGHT_PAREN, "Expect ')' after expression")
+		if eState.HadError {
+			New(tok, eState.S)
+		}
 	}
 	return expr
 }
@@ -126,11 +131,16 @@ func (p *Parser) primary() ast.Expr {
 //
 
 // consume is a parser checker make sure expression enclose
-func (p *Parser) consume(typ t.TokenType, msg error) (t.Token, error) {
+func (p *Parser) consume(typ t.TokenType, msg string) (t.Token, g.ErrState) {
+	var eState g.ErrState
+	eState.HadError = false
 	if p.check(typ) {
-		return p.advance(), nil
+		return p.advance(), eState
 	}
-	return t.Token{}, msg
+	// error occur
+	eState.HadError = true
+	eState.S = msg
+	return t.Token{}, eState
 }
 
 //
@@ -183,4 +193,21 @@ func (p *Parser) previous() t.Token {
 // isAtEnd return Parser.current is EOF
 func (p *Parser) isAtEnd() bool {
 	return p.tokens[p.current].Types == t.EOF
+}
+
+//
+// ERROR
+//
+
+func (e *parserError) Error() string {
+	return e.s
+}
+func New(tok t.Token, msg string) error {
+	var eState g.ErrState
+
+	// just report error back to user
+	eState.ErnoToken(tok, msg)
+
+	// then keep tracking what wrong
+	return &parserError{msg} //TODO
 }
