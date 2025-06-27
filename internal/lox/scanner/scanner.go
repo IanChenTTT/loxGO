@@ -30,6 +30,7 @@ func (s *Scanner) ScanTokens() g.ErrState {
 		s.start = s.current
 		eState = s.scanToken()
 	}
+	s.start = s.current // Make sure last Lexemes is at end
 	s.addToken(t.EOF)
 	return eState
 }
@@ -178,11 +179,11 @@ func (s *Scanner) literalString() error {
 func (s *Scanner) number() error {
 	var isFloat bool
 	for {
-		if s.peek() >= '0' && s.peek() <= '9' {
+		if s.peek() >= '0' && s.peek() <= '9' { // keep scanning if it's number
 			s.advance()
 			continue
 		}
-		if s.peek() == '.' {
+		if s.peek() == '.' { // it's a float 123.
 			if !s.isDigi(s.peekNext()) {
 				// TODO probally 123.method() is allowed need to fix this line
 				s.advance() // advance current . rune
@@ -193,6 +194,17 @@ func (s *Scanner) number() error {
 			continue
 		}
 		break
+	}
+	if s.peek() != ' ' &&
+		s.peek() != '+' &&
+		s.peek() != '-' &&
+		s.peek() != '*' &&
+		s.peek() != '/' &&
+		s.peek() != '\n' &&
+		s.peek() != 0 {
+		e := g.New("not a number missing a seperator ? " + string(s.peek()))
+		s.advance() // advance error rune //TODO
+		return e
 	}
 	if isFloat {
 		val, err := strconv.ParseFloat(s.source[s.start:s.current], 64)

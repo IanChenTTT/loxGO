@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	ast "github.com/IanChenTTT/loxGO/internal/lox/ast"
+	//g "github.com/IanChenTTT/loxGO/internal/lox/global"
 	t "github.com/IanChenTTT/loxGO/internal/lox/token"
 )
 
@@ -125,10 +126,11 @@ func (p *Parser) primary() ast.Expr {
 //
 
 // consume is a parser checker make sure expression enclose
-func (p *Parser) consume(tok t.TokenType, msg error) {
-	if p.tokens[p.current].Types != tok {
-		panic(msg) // TODO
+func (p *Parser) consume(typ t.TokenType, msg error) (t.Token, error) {
+	if p.check(typ) {
+		return p.advance(), nil
 	}
+	return t.Token{}, msg
 }
 
 //

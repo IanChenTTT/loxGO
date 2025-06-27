@@ -27,18 +27,13 @@ func (t *Token) ToString() string {
 	case string:
 		str, _ := t.Literal.(string)
 		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + str
+	case int:
+		in, _ := t.Literal.(int)
+		s := strconv.FormatInt(int64(in), 10)
+		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + s
 	case int32: // single char rune is allias to int 32 wtf
-		switch t.Types {
-		case CHAR:
-			in, _ := t.Literal.(rune)
-			return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + string(in)
-		case INT:
-			in, _ := t.Literal.(int32)
-			s := strconv.FormatInt(int64(in), 10)
-			return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + s
-		default:
-			return "int token type doesn't match literal"
-		}
+		in, _ := t.Literal.(rune)
+		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + string(in)
 	case float64:
 		in, _ := t.Literal.(float64)
 		s := strconv.FormatFloat(in, 'E', -1, 32)
