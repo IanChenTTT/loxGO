@@ -202,7 +202,7 @@ func (s *Scanner) number() error {
 		s.peek() != '/' &&
 		s.peek() != '\n' &&
 		s.peek() != 0 {
-		e := g.New("not a number missing a seperator ? " + string(s.peek()))
+		e := g.New("not a number missing a seperator ? " + s.source[s.start:s.current] + string(s.peek()))
 		s.advance() // advance error rune //TODO
 		return e
 	}
