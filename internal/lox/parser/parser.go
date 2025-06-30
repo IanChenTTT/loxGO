@@ -37,75 +37,86 @@ func NewParser(tokens []t.Token) *Parser {
 		current: 0,
 	}
 }
-func (p *Parser) Run() ast.Expr {
-	return p.expression()
+
+// Run start recursive parsing from list of token
+// TODO error handling
+func (p *Parser) Run() (ast.Expr, g.ErrState) {
+	var eState g.ErrState
+	expr, errs := p.expression() // TODO AST tree error handling
+	if errs != nil {
+		eState.HadError = true
+	}
+	return expr, eState
 }
 
-func (p *Parser) expression() ast.Expr {
+func (p *Parser) expression() (ast.Expr, []error) {
 	return p.equality()
 }
 
 //BINARY
 
 // common operation stand for common binary operation
-func (p *Parser) common(fn func() ast.Expr, typs ...t.TokenType) ast.Expr {
+func (p *Parser) common(fn func() (ast.Expr, []error), typs ...t.TokenType) (ast.Expr, []error) {
 	var expr ast.Expr
-	expr = fn() // start from left expression
+	expr, err := fn() // start from left expression
 	for p.match(typs...) {
 		tok := p.previous()
 		var right ast.Expr
-		right = fn()
+		right, err1 := fn()
+		err = append(err, err1...)
 		expr = &ast.Binary{
 			Left:     expr, // this append previous exprion aka left expression
 			Operator: tok,
 			Right:    right,
 		}
 	}
-	return expr
+	return expr, err
 }
 
 // comparison(...)* this would keep matching (==|!=)
 // ((==|!=)comparison)* => ==a==b like this
-func (p *Parser) equality() ast.Expr {
+func (p *Parser) equality() (ast.Expr, []error) {
 	return p.common(p.comparison, t.BANG_EQUAL, t.EQUAL_EQUAL)
 }
 
 // term(...)* this would keep matching (>|>=|<|<=)
 // ((>|>=|<|<=)term)* => > a > b like this
-func (p *Parser) comparison() ast.Expr {
+func (p *Parser) comparison() (ast.Expr, []error) {
 	return p.common(p.term, t.GREATER, t.GREATER_EQUAL, t.LESS, t.LESS_EQUAL)
 }
 
 // factor(...)* this would keep matching (-|+)
 // ((-|+)factor)* => - b + a like this
-func (p *Parser) term() ast.Expr {
+func (p *Parser) term() (ast.Expr, []error) {
 	return p.common(p.factor, t.MINUS, t.PLUS)
 }
 
 // unary(...)* this would keep matching (*|/)
 // ((*|/)unary)* => * b / a like this
-func (p *Parser) factor() ast.Expr {
+func (p *Parser) factor() (ast.Expr, []error) {
 	return p.common(p.unary, t.SLASH, t.STAR)
 }
 
 // unary will recursive find - or !
 // or not found it just return terminal literal
-func (p *Parser) unary() ast.Expr {
+func (p *Parser) unary() (ast.Expr, []error) {
 	if p.match(t.BANG, t.MINUS) {
 		tok := p.previous()
 		var right ast.Expr
-		right = p.unary()
+		right, err := p.unary()
 		return &ast.Unary{
 			Operator: tok,
 			Right:    right,
-		}
+		}, err
 	}
 	return p.primary()
 }
 
 // primary is last rule that match the terminal
-func (p *Parser) primary() ast.Expr {
+func (p *Parser) primary() (ast.Expr, []error) {
 	var expr ast.Expr
+	var errs []error
+	errs = nil
 	if p.match(t.FALSE) {
 		expr = &ast.Literal{Value: false}
 	} else if p.match(t.TRUE) {
@@ -117,30 +128,19 @@ func (p *Parser) primary() ast.Expr {
 			Value: p.previous().Literal,
 		}
 	} else if p.match(t.LEFT_PAREN) {
-		expr = p.expression()
+		expr1, err1 := p.expression() //this line sucks
 		tok, eState := p.consume(t.RIGHT_PAREN, "Expect ')' after expression")
-		if eState.HadError {
-			New(tok, eState.S)
+		if err1 != nil {
+			errs = append(errs, err1...)
 		}
+		if eState.HadError {
+			errs = append(errs, New(tok, eState.S))
+		}
+		expr = expr1
+	} else {
+		errs = append(errs, New(p.peek(), "expect expression"))
 	}
-	return expr
-}
-
-//
-// ERROR
-//
-
-// consume is a parser checker make sure expression enclose
-func (p *Parser) consume(typ t.TokenType, msg string) (t.Token, g.ErrState) {
-	var eState g.ErrState
-	eState.HadError = false
-	if p.check(typ) {
-		return p.advance(), eState
-	}
-	// error occur
-	eState.HadError = true
-	eState.S = msg
-	return t.Token{}, eState
+	return expr, errs
 }
 
 //
@@ -199,9 +199,19 @@ func (p *Parser) isAtEnd() bool {
 // ERROR
 //
 
-func (e *parserError) Error() string {
-	return e.s
+// consume is a parser checker make sure expression enclose
+func (p *Parser) consume(typ t.TokenType, msg string) (t.Token, g.ErrState) {
+	var eState g.ErrState
+	eState.HadError = false
+	if p.check(typ) {
+		return p.advance(), eState
+	}
+	// error occur
+	eState.HadError = true
+	eState.S = msg
+	return t.Token{}, eState
 }
+
 func (p *Parser) synchronize() {
 	p.advance()
 	for !p.isAtEnd() {
@@ -210,13 +220,29 @@ func (p *Parser) synchronize() {
 		}
 		switch p.peek().Types {
 		case t.CLASS:
+		case t.FUN:
+		case t.VAR:
+		case t.FOR:
+		case t.IF:
+		case t.WHILE:
+		case t.PRINT:
+		case t.RETURN:
 			return
 		}
 	}
 }
-func New(tok t.Token, msg string) error {
-	var eState g.ErrState
 
+// Error is struct method that generate new parserError
+func (e *parserError) Error() string {
+	return e.s
+}
+
+// New set local eState then print the error token
+// return parserError msg
+func New(tok t.Token, msg string) error {
+	var eState g.ErrState //TODO
+
+	eState.HadError = true
 	// just report error back to user
 	eState.ErnoToken(tok, msg)
 

@@ -70,6 +70,9 @@ func run(src *[]byte) g.ErrState {
 	}
 	parsed := parser.NewParser(scanner.Tokens)
 	astPrint := ast.NewASTPrinter()
-	fmt.Println(astPrint.Print(parsed.Run()))
+	expr, eState := parsed.Run()
+	if !eState.HadError {
+		fmt.Println(astPrint.Print(expr))
+	}
 	return eState
 }
