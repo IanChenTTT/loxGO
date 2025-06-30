@@ -202,6 +202,18 @@ func (p *Parser) isAtEnd() bool {
 func (e *parserError) Error() string {
 	return e.s
 }
+func (p *Parser) synchronize() {
+	p.advance()
+	for !p.isAtEnd() {
+		if p.previous().Types == t.SEMICOLON {
+			return
+		}
+		switch p.peek().Types {
+		case t.CLASS:
+			return
+		}
+	}
+}
 func New(tok t.Token, msg string) error {
 	var eState g.ErrState
 

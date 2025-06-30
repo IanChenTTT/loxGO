@@ -24,28 +24,28 @@ const (
 	GREATER_EQUAL
 	LESS
 	LESS_EQUAL
+	AND
+	OR
 	// Literals
 	IDENTIFIER
 	STRING
 	CHAR
 	INT
 	FLOAT
+	NIL
+	TRUE
+	FALSE
 	//Keywords src/go/token/token.go beg if for indexing
 	keyword_beg
-	AND
 	CLASS
 	ELSE
-	FALSE
 	FUN
 	FOR
 	IF
-	NIL
-	OR
 	PRINT
 	RETURN
 	SUPER
 	THIS
-	TRUE
 	VAR
 	WHILE
 	keyword_end
