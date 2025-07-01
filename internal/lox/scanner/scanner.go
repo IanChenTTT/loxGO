@@ -195,11 +195,17 @@ func (s *Scanner) number() error {
 		}
 		break
 	}
+	// detect end of literal
+	// ex:
+	// 123[a-zA-Z]+ no
+	// 123 +-/*)' ''EOF''\n' yes
 	if s.peek() != ' ' &&
 		s.peek() != '+' &&
 		s.peek() != '-' &&
 		s.peek() != '*' &&
 		s.peek() != '/' &&
+		s.peek() != ')' &&
+		s.peek() != ',' &&
 		s.peek() != '\n' &&
 		s.peek() != 0 {
 		e := g.New("not a number missing a seperator ? " + s.source[s.start:s.current] + string(s.peek()))

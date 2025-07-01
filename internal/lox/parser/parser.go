@@ -22,7 +22,7 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | "(" expression "," expression ")" | expression "," expression;
 */
 
 //
@@ -51,6 +51,18 @@ func (p *Parser) Run() (ast.Expr, g.ErrState) {
 
 func (p *Parser) expression() (ast.Expr, []error) {
 	return p.equality()
+}
+
+// expression Wrapper return new ast.Expr, and error
+// TODO when append error something should happend like New in the error section
+func (p *Parser) expressionWrapper(errs *[]error) ast.Expr {
+	expr1, err1 := p.expression() //this line sucks
+	// case 1 (expression)
+	if err1 != nil { // left expression
+		*errs = append(*errs, err1...)
+		return expr1
+	}
+	return expr1
 }
 
 //BINARY
@@ -127,16 +139,30 @@ func (p *Parser) primary() (ast.Expr, []error) {
 		expr = &ast.Literal{
 			Value: p.previous().Literal,
 		}
+	} else if p.match(t.COMMA) {
+		// ERROR comma only appear in paren
+		// soft error handle just return right expression
+		p.advance()
+		expr1 := p.expressionWrapper(&errs) // TODO better error handling
+		return expr1, errs
 	} else if p.match(t.LEFT_PAREN) {
-		expr1, err1 := p.expression() //this line sucks
+		var expr1 ast.Expr
+		var expr2 ast.Expr
+		expr1 = p.expressionWrapper(&errs) // TODO better error handling
+		// case 1 (expression)
 		tok, eState := p.consume(t.RIGHT_PAREN, "Expect ')' after expression")
-		if err1 != nil {
-			errs = append(errs, err1...)
+		switch tok.Types {
+		case t.COMMA:
+			p.advance() // skip current to next expression
+			expr2 := p.expressionWrapper(&errs)
+			return expr2, errs
+		default:
+			if eState.HadError {
+				errs = append(errs, New(tok, eState.S))
+				return expr2, errs //empty ast.Expr, errs
+			}
+			return expr1, errs // (expression), errs
 		}
-		if eState.HadError {
-			errs = append(errs, New(tok, eState.S))
-		}
-		expr = expr1
 	} else {
 		errs = append(errs, New(p.peek(), "expect expression"))
 	}
@@ -209,7 +235,7 @@ func (p *Parser) consume(typ t.TokenType, msg string) (t.Token, g.ErrState) {
 	// error occur
 	eState.HadError = true
 	eState.S = msg
-	return t.Token{}, eState
+	return p.peek(), eState
 }
 
 func (p *Parser) synchronize() {
@@ -237,7 +263,8 @@ func (e *parserError) Error() string {
 	return e.s
 }
 
-// New set local eState then print the error token
+// New set local eState
+// print the error token
 // return parserError msg
 func New(tok t.Token, msg string) error {
 	var eState g.ErrState //TODO

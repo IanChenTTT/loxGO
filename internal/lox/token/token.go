@@ -1,7 +1,9 @@
 package token
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 )
 
 type Literal interface {
@@ -23,23 +25,30 @@ func (t *Token) token(parToken Token) error {
 	return nil
 }
 func (t *Token) ToString() string {
+	var build strings.Builder
+	fmt.Fprintf(&build, "type: %-10s  lexemes: %-10s", t.Types.String(), t.Lexemes)
 	switch t.Literal.(type) {
 	case string:
 		str, _ := t.Literal.(string)
-		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + str
+		fmt.Fprintf(&build, "literal: %-10s", str)
+		return build.String()
 	case int:
 		in, _ := t.Literal.(int)
-		s := strconv.FormatInt(int64(in), 10)
-		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + s
+		str := strconv.FormatInt(int64(in), 10)
+		fmt.Fprintf(&build, "literal: %-10s", str)
+		return build.String()
 	case int32: // single char rune is allias to int 32 wtf
 		in, _ := t.Literal.(rune)
-		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + string(in)
+		fmt.Fprintf(&build, "literal: %-10s", string(in))
+		return build.String()
 	case float64:
 		in, _ := t.Literal.(float64)
-		s := strconv.FormatFloat(in, 'E', -1, 32)
-		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + s
+		str := strconv.FormatFloat(in, 'E', -1, 32)
+		fmt.Fprintf(&build, "literal: %-10s", str)
+		return build.String()
 	case nil:
-		return "type: " + t.Types.String() + " lexemes: " + t.Lexemes + " literal: " + NIL.String()
+		fmt.Fprintf(&build, "literal: %-10s", NIL.String())
+		return build.String()
 	default:
 		return "token not found"
 	}

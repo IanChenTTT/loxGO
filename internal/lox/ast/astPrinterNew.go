@@ -40,6 +40,12 @@ func (ast *ASTPrinter) visitLiteral(expr Literal) any {
 	case int32:
 		in, _ := expr.Value.(rune)
 		return string(in)
+	case bool:
+		in, _ := expr.Value.(bool)
+		if in {
+			return "true"
+		}
+		return "false"
 	}
 	return ""
 }
