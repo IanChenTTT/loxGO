@@ -22,7 +22,7 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | "(" expression "," expression ")" | expression "," expression;
+primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | "(" expression "," expression ")";
 */
 
 //
@@ -139,12 +139,6 @@ func (p *Parser) primary() (ast.Expr, []error) {
 		expr = &ast.Literal{
 			Value: p.previous().Literal,
 		}
-	} else if p.match(t.COMMA) {
-		// ERROR comma only appear in paren
-		// soft error handle just return right expression
-		p.advance()
-		expr1 := p.expressionWrapper(&errs) // TODO better error handling
-		return expr1, errs
 	} else if p.match(t.LEFT_PAREN) {
 		var expr1 ast.Expr
 		var expr2 ast.Expr
@@ -152,15 +146,17 @@ func (p *Parser) primary() (ast.Expr, []error) {
 		// case 1 (expression)
 		tok, eState := p.consume(t.RIGHT_PAREN, "Expect ')' after expression")
 		switch tok.Types {
-		case t.COMMA:
+		case t.COMMA: // in case of 234, 123 it will just execute 234, not handling right expression
 			p.advance() // skip current to next expression
 			expr2 := p.expressionWrapper(&errs)
+			p.advance()
 			return expr2, errs
 		default:
 			if eState.HadError {
 				errs = append(errs, New(tok, eState.S))
 				return expr2, errs //empty ast.Expr, errs
 			}
+			//fmt.Println(ast.NewASTPrinter().Print(expr1))
 			return expr1, errs // (expression), errs
 		}
 	} else {
