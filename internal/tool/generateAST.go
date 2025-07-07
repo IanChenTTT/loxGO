@@ -12,10 +12,11 @@ import (
 /*
 base:
 target:
+	"Unary    : Token operator, Expr right"
 	"Binary   : Expr left, Token operator, Expr right",
+	"Ternary" : Expr left, Token operator, Expr middle, Token operator, Expr right", // NEW custom expr
 	"Grouping : Expr expression",
 	"Literal  : Object value",
-	"Unary    : Token operator, Expr right"
 
 generate:
 import java.util.List;
@@ -154,11 +155,29 @@ func defineAST(DIR string) error {
 		Base:    "Expr",
 		SubBase: []ASTtmplSUB{
 			{
+				Sub:      "Unary",
+				NickName: "g",
+				Param: []ASTtmplType{
+					{Field: "Operator", TypeName: "t.Token"},
+					{Field: "Right", TypeName: "Expr"}},
+			},
+			{
 				Sub:      "Binary",
 				NickName: "b",
 				Param: []ASTtmplType{
 					{Field: "Left", TypeName: "Expr"},
 					{Field: "Operator", TypeName: "t.Token"},
+					{Field: "Right", TypeName: "Expr"},
+				},
+			},
+			{
+				Sub:      "Ternary",
+				NickName: "t",
+				Param: []ASTtmplType{
+					{Field: "Left", TypeName: "Expr"},
+					{Field: "Operator1", TypeName: "t.Token"},
+					{Field: "Middle", TypeName: "Expr"},
+					{Field: "Operator2", TypeName: "t.Token"},
 					{Field: "Right", TypeName: "Expr"},
 				},
 			},
@@ -171,13 +190,6 @@ func defineAST(DIR string) error {
 				Sub:      "Literal",
 				NickName: "l",
 				Param:    []ASTtmplType{{Field: "Value", TypeName: "any"}},
-			},
-			{
-				Sub:      "Unary",
-				NickName: "g",
-				Param: []ASTtmplType{
-					{Field: "Operator", TypeName: "t.Token"},
-					{Field: "Right", TypeName: "Expr"}},
 			},
 		},
 	}

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/IanChenTTT/loxGO/internal/tool"
+
 	"os"
 )
 
@@ -12,5 +14,5 @@ func main() {
 		panic("usage ./genAST relativePathToFolder")
 	}
 	tool.GenAST(os.Args[1])
-	tool.AstPrint()
+	tool.AstPrint() // TODO need seperate this damn thing
 }

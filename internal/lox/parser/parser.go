@@ -16,7 +16,8 @@ type parserError struct {
 
 /*
 lowest priority to highest priority
-expression     → equality ;
+expression     → conditional;
+conditional 	 → equality ( "?" equality ":" equality )*
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
@@ -63,6 +64,19 @@ func (p *Parser) expressionWrapper(errs *[]error) ast.Expr {
 		return expr1
 	}
 	return expr1
+}
+
+// conditional(...)* this would keep matching (?expr1:expr2)
+// (?expr1:expr2)* => (? a :( b ? c : d)) like this
+// (1 > 2 ? 3 : 4 ? 5 : 6) -> (1 > 2 ? 3 : (4 ? 5 : 6)) from right to left
+// expression above should return 5
+func (p *Parser) conditional() (ast.Expr, []error) {
+	var expr ast.Expr
+	expr, err := p.equality() // impicit conversions c++
+	for p.match(t.CONDITION) {
+
+	}
+	return expr, err
 }
 
 //BINARY
@@ -147,16 +161,15 @@ func (p *Parser) primary() (ast.Expr, []error) {
 		tok, eState := p.consume(t.RIGHT_PAREN, "Expect ')' after expression")
 		switch tok.Types {
 		case t.COMMA: // in case of 234, 123 it will just execute 234, not handling right expression
-			p.advance() // skip current to next expression
+			p.advance() // jump ,
 			expr2 := p.expressionWrapper(&errs)
-			p.advance()
+			p.advance() // jump expr2
 			return expr2, errs
 		default:
 			if eState.HadError {
 				errs = append(errs, New(tok, eState.S))
 				return expr2, errs //empty ast.Expr, errs
 			}
-			//fmt.Println(ast.NewASTPrinter().Print(expr1))
 			return expr1, errs // (expression), errs
 		}
 	} else {

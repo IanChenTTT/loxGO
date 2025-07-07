@@ -16,8 +16,20 @@ func NewASTPrinter() *ASTPrinter {
 func (astp *ASTPrinter) Print(expr Expr) any {
 	return expr.accept(astp)
 }
+func (ast *ASTPrinter) visitUnary(expr Unary) any {
+	return ast.parenthesize(expr.Operator.Lexemes, expr.Right)
+}
+
 func (ast *ASTPrinter) visitBinary(expr Binary) any {
 	return ast.parenthesize(expr.Operator.Lexemes, expr.Left, expr.Right)
+}
+func (ast *ASTPrinter) visitTernary(expr Ternary) any {
+	return ast.parenthesize(
+		expr.Operator1.Lexemes+expr.Operator2.Lexemes,
+		expr.Left,
+		expr.Middle,
+		expr.Right,
+	)
 }
 func (ast *ASTPrinter) visitGrouping(expr Grouping) any {
 	return ast.parenthesize("group", expr.Expr)
@@ -49,9 +61,6 @@ func (ast *ASTPrinter) visitLiteral(expr Literal) any {
 	}
 	return ""
 }
-func (ast *ASTPrinter) visitUnary(expr Unary) any {
-	return ast.parenthesize(expr.Operator.Lexemes, expr.Right)
-}
 func (ast *ASTPrinter) parenthesize(name string, exprs ...Expr) string {
 	var build strings.Builder
 	fmt.Fprintf(&build, "(%s", name)
@@ -70,6 +79,7 @@ func (ast *ASTPrinter) parenthesize(name string, exprs ...Expr) string {
 
 // test function
 func Run() {
+	ast := NewASTPrinter()
 	var ex Expr
 	ex = &Binary{
 		Left: &Unary{
@@ -93,6 +103,27 @@ func Run() {
 			Expr: &Literal{Value: 45.67},
 		},
 	}
-	ast := NewASTPrinter()
+	fmt.Println(ast.Print(ex))
+	ex = &Ternary{
+		Left: ex,
+		Operator1: t.Token{
+			Types:   t.CONDITION,
+			Lexemes: "?",
+			Literal: nil,
+			Line:    0,
+		},
+		Middle: &Literal{
+			Value: "Hallo",
+		},
+		Operator2: t.Token{
+			Types:   t.COLON,
+			Lexemes: ":",
+			Literal: nil,
+			Line:    0,
+		},
+		Right: &Literal{
+			Value: "World",
+		},
+	}
 	fmt.Println(ast.Print(ex))
 }

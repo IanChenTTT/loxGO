@@ -67,6 +67,10 @@ func (s *Scanner) scanToken() g.ErrState {
 		s.addToken(g.Iff(s.match('='), t.LESS_EQUAL, t.LESS))
 	case '>':
 		s.addToken(g.Iff(s.match('='), t.GREATER_EQUAL, t.GREATER))
+	case '?':
+		s.addToken(t.CONDITION)
+	case ':':
+		s.addToken(t.COLON)
 	case '/':
 		if err := s.comment(); err != nil {
 			eState.Erno(s.line, err.Error())
@@ -206,6 +210,7 @@ func (s *Scanner) number() error {
 		s.peek() != '/' &&
 		s.peek() != ')' &&
 		s.peek() != ',' &&
+		s.peek() != '=' &&
 		s.peek() != '\n' &&
 		s.peek() != 0 {
 		e := g.New("not a number missing a seperator ? " + s.source[s.start:s.current] + string(s.peek()))

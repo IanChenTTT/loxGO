@@ -17,8 +17,9 @@
     ```
 -  generate AST node file
     1. run
+        - recommend path ./internal/lox/ast/ast.go 
     ```bash
-    ./ast.sh Path
+    ./ast.sh ./internal/lox/YourPath.go
     ```
     2. build
     ```bash

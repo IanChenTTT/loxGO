@@ -16,20 +16,22 @@ const (
 	SLASH
 	STAR
 	// One or two character tokens
+	AND
 	BANG
 	BANG_EQUAL
+	CONDITION
+	COLON
 	EQUAL
 	EQUAL_EQUAL
 	GREATER
 	GREATER_EQUAL
 	LESS
 	LESS_EQUAL
-	AND
 	OR
 	// Literals
+	CHAR
 	IDENTIFIER
 	STRING
-	CHAR
 	INT
 	FLOAT
 	//TODO
