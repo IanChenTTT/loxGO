@@ -189,7 +189,6 @@ func (s *Scanner) number() error {
 		}
 		if s.peek() == '.' { // it's a float 123.
 			if !s.isDigi(s.peekNext()) {
-				// TODO probally 123.method() is allowed need to fix this line
 				s.advance() // advance current . rune
 				return g.New("number was not properly form last digit is .")
 			}
@@ -200,9 +199,10 @@ func (s *Scanner) number() error {
 		break
 	}
 	// detect end of literal
+	// TODO fix this shit
 	// ex:
-	// 123[a-zA-Z]+ no
-	// 123 +-/*)' ''EOF''\n' yes
+	// 123[a-zA-Z]+ => no
+	// 123 +-/*)' ''EOF''\n' => yes
 	if s.peek() != ' ' &&
 		s.peek() != '+' &&
 		s.peek() != '-' &&
@@ -211,6 +211,10 @@ func (s *Scanner) number() error {
 		s.peek() != ')' &&
 		s.peek() != ',' &&
 		s.peek() != '=' &&
+		s.peek() != '?' &&
+		s.peek() != ':' &&
+		s.peek() != '<' &&
+		s.peek() != '>' &&
 		s.peek() != '\n' &&
 		s.peek() != 0 {
 		e := g.New("not a number missing a seperator ? " + s.source[s.start:s.current] + string(s.peek()))

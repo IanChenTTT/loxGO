@@ -40,10 +40,9 @@ func NewParser(tokens []t.Token) *Parser {
 }
 
 // Run start recursive parsing from list of token
-// TODO error handling
 func (p *Parser) Run() (ast.Expr, g.ErrState) {
 	var eState g.ErrState
-	expr, errs := p.expression() // TODO AST tree error handling
+	expr, errs := p.expression() // TODO AST tree better error handling
 	if errs != nil {
 		eState.HadError = true
 	}
@@ -51,11 +50,10 @@ func (p *Parser) Run() (ast.Expr, g.ErrState) {
 }
 
 func (p *Parser) expression() (ast.Expr, []error) {
-	return p.equality()
+	return p.conditional()
 }
 
 // expression Wrapper return new ast.Expr, and error
-// TODO when append error something should happend like New in the error section
 func (p *Parser) expressionWrapper(errs *[]error) ast.Expr {
 	expr1, err1 := p.expression() //this line sucks
 	// case 1 (expression)
@@ -71,12 +69,29 @@ func (p *Parser) expressionWrapper(errs *[]error) ast.Expr {
 // (1 > 2 ? 3 : 4 ? 5 : 6) -> (1 > 2 ? 3 : (4 ? 5 : 6)) from right to left
 // expression above should return 5
 func (p *Parser) conditional() (ast.Expr, []error) {
-	var expr ast.Expr
-	expr, err := p.equality() // impicit conversions c++
+	lexpr, err := p.equality() // impicit conversions to bool  TODO (c++)?
 	for p.match(t.CONDITION) {
+		tok1 := p.previous()        // lexpr ? <=
+		mexpr, err1 := p.equality() // lexpr ? mexpr
+		err = append(err, err1...)
 
+		tok2, eState := p.consume(t.COLON, "Expect `:` after expression")
+		if eState.HadError {
+			var expr ast.Expr
+			err = append(err, New(tok2, eState.S))
+			return expr, err //empty ast.Expr, errs
+		}
+		rexpr, err1 := p.equality() // lexpr ? mexpr : rexpr
+		err = append(err, err1...)
+		lexpr = &ast.Ternary{
+			Left:      lexpr,
+			Operator1: tok1,
+			Middle:    mexpr,
+			Operator2: tok2,
+			Right:     rexpr,
+		}
 	}
-	return expr, err
+	return lexpr, err
 }
 
 //BINARY
@@ -156,7 +171,7 @@ func (p *Parser) primary() (ast.Expr, []error) {
 	} else if p.match(t.LEFT_PAREN) {
 		var expr1 ast.Expr
 		var expr2 ast.Expr
-		expr1 = p.expressionWrapper(&errs) // TODO better error handling
+		expr1 = p.expressionWrapper(&errs)
 		// case 1 (expression)
 		tok, eState := p.consume(t.RIGHT_PAREN, "Expect ')' after expression")
 		switch tok.Types {
