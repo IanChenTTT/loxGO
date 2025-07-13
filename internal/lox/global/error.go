@@ -30,7 +30,7 @@ func New(s string) error {
 func (eState *ErrState) Erno(line int, msg string) {
 	report(ErrReport{
 		line:  line,
-		where: "",
+		where: "NAN",
 		msg:   msg,
 		state: *eState,
 	})
@@ -60,6 +60,6 @@ func (eState *ErrState) ErnoToken(tok t.Token, msg string) {
 	report(err)
 }
 func report(ep ErrReport) {
-	fmt.Println(fmt.Errorf("[line %d] Error:%s : %s", ep.line, ep.where, ep.msg))
+	fmt.Println(fmt.Errorf("[line %d] Where:%s Error : %s", ep.line, ep.where, ep.msg))
 	ep.state.HadError = true
 }

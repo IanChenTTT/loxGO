@@ -150,7 +150,12 @@ func (s *Scanner) literalChar() error {
 	c := s.peek()
 	if c >= 0 && c <= 127 {
 		if s.peekNext() != '\'' {
-			return g.New("char was not properly close found: " + string(s.peekNext()))
+			// if any error occur skip current line like c
+			// single line operation !!!!
+			for s.peek() != '\n' {
+				s.advance()
+			}
+			return g.New("char was not properly close found: " + s.source[s.start:s.current])
 		}
 		s.advance()
 		s.advance()
@@ -168,8 +173,12 @@ func (s *Scanner) literalString() error {
 		}
 		s.advance()
 	}
+
+	// not found pair ""
+	// so it read till the end
+	// multi line operation !!!!
 	if s.peek() != '"' || s.isAtEnd() { //not found pair /* */
-		return g.New("string was was not close")
+		return g.New("string was was not close: " + s.source[s.start:s.current])
 	}
 	s.advance() // current is "
 	val := s.source[s.start+1 : s.current-1]
