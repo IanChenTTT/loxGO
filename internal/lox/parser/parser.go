@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"fmt"
-
 	ast "github.com/IanChenTTT/loxGO/internal/lox/ast"
 	g "github.com/IanChenTTT/loxGO/internal/lox/global"
 	t "github.com/IanChenTTT/loxGO/internal/lox/token"
@@ -16,6 +14,7 @@ type parserError struct {
 	s string
 }
 
+// GLOBAL
 var eSize = 0
 
 /*
@@ -33,6 +32,10 @@ primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression "
 //
 //MAIN
 //
+
+func init() {
+	eSize = 0
+}
 
 // newParser reutrn new Parser struct
 // new copy method no interface
@@ -107,7 +110,6 @@ func (p *Parser) common(fn func() (ast.Expr, []error), typs ...t.TokenType) (ast
 	var err []error
 	var expr1 ast.Expr
 	var err1 []error
-	eSize = 0
 	// keep iterating until it find correct form of binary
 	// if left missing, skip operator,skip right operand
 	for true {
@@ -136,7 +138,6 @@ func (p *Parser) common(fn func() (ast.Expr, []error), typs ...t.TokenType) (ast
 		break
 	}
 	for p.match(typs...) {
-		fmt.Println("should match")
 		tok := p.previous()
 		var right ast.Expr
 		right, err1 := fn()
