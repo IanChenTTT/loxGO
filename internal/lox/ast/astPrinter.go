@@ -17,6 +17,9 @@ func (astp *ASTPrinter) Print(expr Expr) any {
 	return expr.accept(astp)
 }
 func (ast *ASTPrinter) visitUnary(expr Unary) any {
+	if (Unary{}) == expr {
+		return "NULL"
+	}
 	return ast.parenthesize(expr.Operator.Lexemes, expr.Right)
 }
 
@@ -24,6 +27,9 @@ func (ast *ASTPrinter) visitBinary(expr Binary) any {
 	return ast.parenthesize(expr.Operator.Lexemes, expr.Left, expr.Right)
 }
 func (ast *ASTPrinter) visitTernary(expr Ternary) any {
+	if (Ternary{}) == expr {
+		return "NULL"
+	}
 	return ast.parenthesize(
 		expr.Operator1.Lexemes+expr.Operator2.Lexemes,
 		expr.Left,
@@ -32,11 +38,14 @@ func (ast *ASTPrinter) visitTernary(expr Ternary) any {
 	)
 }
 func (ast *ASTPrinter) visitGrouping(expr Grouping) any {
+	if (Grouping{}) == expr {
+		return "NULL"
+	}
 	return ast.parenthesize("group", expr.Expr)
 }
 func (ast *ASTPrinter) visitLiteral(expr Literal) any {
-	if expr.Value == nil {
-		return "nil"
+	if (Literal{}) == expr || expr.Value == nil {
+		return "NULL"
 	}
 	switch expr.Value.(type) {
 	case string:

@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	ast "github.com/IanChenTTT/loxGO/internal/lox/ast"
 	g "github.com/IanChenTTT/loxGO/internal/lox/global"
 	t "github.com/IanChenTTT/loxGO/internal/lox/token"
@@ -13,6 +15,8 @@ type Parser struct {
 type parserError struct {
 	s string
 }
+
+var eSize = 0
 
 /*
 lowest priority to highest priority
@@ -45,6 +49,7 @@ func (p *Parser) Run() (ast.Expr, g.ErrState) {
 	expr, errs := p.expression() // TODO AST tree better error handling
 	if errs != nil {
 		eState.HadError = true
+		eState.S = "Parsing error"
 	}
 	return expr, eState
 }
@@ -99,8 +104,39 @@ func (p *Parser) conditional() (ast.Expr, []error) {
 // common operation stand for common binary operation
 func (p *Parser) common(fn func() (ast.Expr, []error), typs ...t.TokenType) (ast.Expr, []error) {
 	var expr ast.Expr
-	expr, err := fn() // start from left expression
+	var err []error
+	var expr1 ast.Expr
+	var err1 []error
+	eSize = 0
+	// keep iterating until it find correct form of binary
+	// if left missing, skip operator,skip right operand
+	for true {
+		expr1, err1 = fn() // start from left expression
+
+		// because error return we need keep track error len
+		// equality->comparison->term->factor // function stack
+		// err<-err<-err<-err // return stack
+		// so inorder knowing err length accross function
+		// I just use global eSize to count ? // TODO better way definitely
+		if err1 != nil {
+			err = append(err, err1...)
+			if len(err1) > eSize {
+				eSize++
+				if t.IsBinary(p.tokens[p.current].Types.String()) {
+					p.advance()
+					p.advance()
+				}
+				if p.isAtEnd() {
+					return expr1, err
+				}
+				continue
+			}
+		}
+		expr = expr1
+		break
+	}
 	for p.match(typs...) {
+		fmt.Println("should match")
 		tok := p.previous()
 		var right ast.Expr
 		right, err1 := fn()

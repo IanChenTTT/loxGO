@@ -72,7 +72,12 @@ func run(src *[]byte) g.ErrState {
 	astPrint := ast.NewASTPrinter()
 	expr, eState := parsed.Run()
 	if !eState.HadError {
+		fmt.Println("raw: ", expr)
 		fmt.Println(astPrint.Print(expr))
+		return eState
 	}
+	fmt.Printf("eState error: %s Remain expr: %v type: %T \n",
+		eState.S, expr, expr)
 	return eState
+
 }

@@ -3,37 +3,53 @@ package token
 type TokenType int
 
 const (
-	// Single-character tokens
-	LEFT_PAREN TokenType = iota
-	RIGHT_PAREN
-	LEFT_BRACE
-	RIGHT_BRACE
-	COMMA
-	DOT
-	MINUS
-	PLUS
-	SEMICOLON
-	SLASH
-	STAR
-	// One or two character tokens
-	AND
-	BANG
-	BANG_EQUAL
-	CONDITION
-	COLON
-	EQUAL
-	EQUAL_EQUAL
-	GREATER
-	GREATER_EQUAL
-	LESS
-	LESS_EQUAL
-	OR
+	EOF TokenType = iota
+
+	operator_start
+
+	// TODO unlable token
+	LEFT_PAREN  // (
+	RIGHT_PAREN // )
+	LEFT_BRACE  // {
+	RIGHT_BRACE // }
+	DOT         // .
+	SEMICOLON   // ;
+	EQUAL       //=
+
+	unary_start
+	BANG //!
+	unary_end
+
+	binary_start
+	MINUS // -
+	PLUS  // +
+	SLASH // /
+	STAR  // *
+
+	AND           // &&
+	OR            // ||
+	BANG_EQUAL    // !=
+	EQUAL_EQUAL   // ==
+	GREATER       // >
+	GREATER_EQUAL // >=
+	LESS          // <
+	LESS_EQUAL    // <=
+	COMMA         // ,
+	binary_end
+
+	ternary_start
+	CONDITION //?
+	COLON     //:
+	ternary_end
+
+	operator_end
+
 	// Literals
-	CHAR
-	IDENTIFIER
-	STRING
-	INT
-	FLOAT
+	CHAR       // 'c'
+	IDENTIFIER // main
+	STRING     // "st"
+	INT        // 123
+	FLOAT      // 123.12
 	//TODO
 	begin_const_identifier
 	NIL
@@ -54,8 +70,6 @@ const (
 	VAR
 	WHILE
 	keyword_end
-
-	EOF
 )
 
 var TokenName = map[TokenType]string{
@@ -113,6 +127,7 @@ var TokenName = map[TokenType]string{
 // use LookUp to find match keyword
 var keywords map[string]TokenType          //key:string val: int
 var const_identifiers map[string]TokenType //key:string val: int
+var binary map[string]TokenType            //key:string val: int
 func init() {
 	keywords = make(map[string]TokenType, keyword_end-(keyword_beg+1))
 	for i := keyword_beg + 1; i < keyword_end; i++ {
@@ -122,6 +137,11 @@ func init() {
 	for i := begin_const_identifier + 1; i < end_const_identifier; i++ {
 		const_identifiers[TokenName[i]] = i
 	}
+	binary = make(map[string]TokenType, binary_end-(binary_start+1))
+	for i := binary_start + 1; i < binary_end; i++ {
+		binary[TokenName[i]] = i
+	}
+
 }
 
 // Lookup functon search keyword
@@ -134,6 +154,12 @@ func Lookup(idet string) TokenType {
 		return tok
 	}
 	return IDENTIFIER
+}
+func IsBinary(idet string) bool {
+	if _, ok := binary[idet]; ok {
+		return true
+	}
+	return false
 }
 
 // String return token string
